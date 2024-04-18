@@ -2967,8 +2967,14 @@ Public Sub Jump(hHive As ENUM_REG_HIVE, ByVal sKey As String, Optional sValue As
         hwndRegedit = FindWindow(StrPtr("RegEdit_RegEdit"), 0)
     Loop Until hwndRegedit <> 0 Or nMSec > 5000 '5 Sec. timeout
     
-    hwndTreeView = FindWindowEx(hwndRegedit, 0, StrPtr("SysTreeView32"), 0)
-    hwndListView = FindWindowEx(hwndRegedit, 0, StrPtr("SysListView32"), 0)
+    nMSec = 0
+    Do
+        Sleep 200
+        nMSec = nMSec + 200
+        hwndTreeView = FindWindowEx(hwndRegedit, 0, StrPtr("SysTreeView32"), 0)
+        hwndListView = FindWindowEx(hwndRegedit, 0, StrPtr("SysListView32"), 0)
+    Loop Until (hwndTreeView <> 0 And hwndListView <> 0) Or nMSec > 5000 '5 Sec. timeout
+    
     If hwndTreeView = 0 Or hwndListView = 0 Then
         'Unable to start Regedit.
         MsgBoxW "Cannot select regedit value. hRegedit = " & hwndRegedit & ", hTreeView = " & hwndTreeView & ", hListView = " & hwndListView

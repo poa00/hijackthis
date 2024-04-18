@@ -4951,7 +4951,7 @@ Private Sub cmdFix_Click()
     End If
     
     'Lamer protection
-    If (lstResults.CheckedIndices.Count > 10) Then
+    If (lstResults.CheckedIndices.Count > 10) And (lstResults.CheckedIndices.Count / lstResults.ListCount * 100 > 50) Then
         For i = 0 To lstResults.ListCount - 1
             If lstResults.ItemChecked(i) = True Then
                 sItem = lstResults.List(i)

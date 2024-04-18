@@ -598,6 +598,7 @@ Public Sub AddToScanResults( _
     
     Dim bFirstWarning As Boolean
     Dim bAddedToList As Boolean
+    Dim iStage As Long
     
     On Error GoTo ErrorHandler:
     
@@ -607,10 +608,13 @@ Public Sub AddToScanResults( _
     'moved to => IsOnIgnoreList
     
     If DoNotDuplicate Then
+        iStage = 1
         If UBound(Scan) > 0 Then
+            iStage = 2
             Dim idx As Long
             idx = FindHitLineIndex(result.HitLineW)
             If idx <> 0 Then
+                iStage = 3
                 ConcatScanResults Scan(idx), result
                 GoTo Finalize
             End If
@@ -624,36 +628,45 @@ Public Sub AddToScanResults( _
     End If
     If Not DoNotAddToListBox Then
         'checking if one of sections planned to be contains more then 50 entries -> block such attempt
+        iStage = 4
         If Not SectionOutOfLimit(result.Section, bFirstWarning) Then
             bAddedToList = True
             'Commented (no difference)
             'LockWindowUpdate frmMain.lstResults.hwnd
+            iStage = 5
             frmMain.lstResults.AddItem LimitHitLineLength(result.HitLineW, LIMIT_CHARS_COUNT_FOR_LISTLINE)
             'LockWindowUpdate 0&
             'Unicode to ANSI mapping (dirty hack)
+            iStage = 6
             result.HitLineA = frmMain.lstResults.List(frmMain.lstResults.ListCount - 1)
             
             'select the last added line
             If SelLastAdded Then
+                iStage = 7
                 frmMain.lstResults.ListIndex = frmMain.lstResults.ListCount - 1
             End If
         Else
             If bFirstWarning Then
                 'LockWindowUpdate frmMain.lstResults.hwnd
+                iStage = 8
                 frmMain.lstResults.AddItem result.Section & " - Too many entries ( > 250 )" '=> look Const LIMIT
                 'LockWindowUpdate 0&
+                iStage = 9
                 AppendErrorLogCustom result.Section & " - Too many entries ( > 250 )"
                 If SelLastAdded Then
+                    iStage = 10
                     frmMain.lstResults.ListIndex = frmMain.lstResults.ListCount - 1
                 End If
             End If
         End If
     End If
+    iStage = 11
     ReDim Preserve Scan(UBound(Scan) + 1)
+    iStage = 12
     Scan(UBound(Scan)) = result
     
     If (bDebugMode Or bDebugToFile) Then
-        
+        iStage = 13
         AppendErrorLogCustom "NEW DETECTION: " & result.HitLineW
         
         If bAddedToList Then
@@ -667,12 +680,13 @@ Finalize:
     
     'Erase Result struct
     If Not DontClearResults Then
+        iStage = 14
         EraseScanResults result
     End If
     
     Exit Sub
 ErrorHandler:
-    ErrorMsg Err, "AddToScanResults", result.Section
+    ErrorMsg Err, "AddToScanResults", result.Section, result.HitLineW, "Stage: " & iStage
     If inIDE Then Stop: Resume Next
 End Sub
 

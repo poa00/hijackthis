@@ -1353,10 +1353,12 @@ Private Function AnalyzeTask(sFilename As String, te() As TASK_ENTRY) As Long
 '                        te(j).PrincipalId = xmlAttribute.Value
 '                    End If
 '                Next
-                te(j).GroupId = xmlElement.Node(i).NodeValueByName("GroupId")
-                te(j).UserId = xmlElement.Node(i).NodeValueByName("UserId")
+                te(0).GroupId = xmlElement.Node(i).NodeValueByName("GroupId")
+                te(0).UserId = xmlElement.Node(i).NodeValueByName("UserId")
                 
                 'Debug.Print te(j).PrincipalId & " = " & te(j).UserId & "( " & te(j).GroupId & " )"
+                
+                Exit For
             End If
         Next
     End If
@@ -1437,6 +1439,8 @@ Private Function AnalyzeTask(sFilename As String, te() As TASK_ENTRY) As Long
     
     For i = 1 To UBound(te)
         te(i).Enabled = te(0).Enabled
+        te(i).UserId = te(0).UserId
+        te(i).GroupId = te(0).GroupId
     Next
     
     AnalyzeTask = j

@@ -11,7 +11,11 @@ Version history:
 |||||       1. HiJackThis: changelog         |||||
 ==================================================
 
-[3.4.0.8 Alpha] - 23.03.2024
+[3.4.0.9 Alpha] - Apr 18, 2024
+ - Fixed false positive "User missing" in O22 - Tasks (thanks to picasso).
+ - Improved RegJump.
+
+[3.4.0.8 Alpha] - Mar 23, 2024
  - The "Fix everything" option is blocked to protect inexperienced users.
  - Registry Key Unlocker: added the ability to specify SDDL and retrieve it from the descriptor of specified key.
  - Registry Key Unlocker: improved log formatting, added SDDL output before and after the fix.

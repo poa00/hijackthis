@@ -1088,32 +1088,35 @@ Private Function ConvertHiveHandleToSeObjectName(hHive As Long) As String
     ConvertHiveHandleToSeObjectName = SeObj
 End Function
 
+'https://learn.microsoft.com/en-us/archive/msdn-magazine/2005/march/using-net-making-privileges-reliable-secure-and-efficient
 Public Function SetCurrentProcessPrivileges(PrivilegeName As String) As Boolean
     
-    Dim tp As TOKEN_PRIVILEGES, hToken&
+    Dim tp As TOKEN_PRIVILEGES, hToken&, errCode&
     
     If LookupPrivilegeValue(0&, StrPtr(PrivilegeName), tp.LuidLowPart) Then   'i.e. "SeDebugPrivilege"
     
-        If 0 = OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES Or TOKEN_QUERY, 1&, hToken) Then
-        
-            If Err.LastDllError = ERROR_NO_TOKEN Then
-            
-                If 0 = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES Or TOKEN_QUERY, hToken) Then
-                    Exit Function
-                End If
-            Else
-                Exit Function
-            End If
+        If 0 = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES Or TOKEN_QUERY, hToken) Then
+            Dbg "Failed to open process token. Code: " & Err.LastDllError
+            Exit Function
         End If
         
         If hToken <> 0 Then
             tp.PrivilegeCount = 1
             tp.Attributes = SE_PRIVILEGE_ENABLED
-            SetCurrentProcessPrivileges = AdjustTokenPrivileges(hToken, 0&, tp, 0&, 0&, 0&)
+            If AdjustTokenPrivileges(hToken, 0&, tp, 0&, 0&, 0&) Then
+                errCode = Err.LastDllError
+                If errCode = ERROR_SUCCESS Then
+                    Dbg "PRIVILEGE: " & PrivilegeName & " - Granted"
+                    SetCurrentProcessPrivileges = True
+                End If
+            End If
+            
             CloseHandle hToken
         End If
         
-        Dbg "PRIVILEGE: " & PrivilegeName & " - " & IIf(SetCurrentProcessPrivileges, "Granted", "FAILURE !!!")
+        If Not SetCurrentProcessPrivileges Then
+            Dbg "PRIVILEGE: " & PrivilegeName & " - FAILURE. Code: " & errCode
+        End If
     End If
 End Function
 
