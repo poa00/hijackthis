@@ -11,6 +11,18 @@ Version history:
 |||||       1. HiJackThis: changelog         |||||
 ==================================================
 
+[3.4.0.13 Alpha] - Dec 12, 2024
+ - O26 - Debugger: Added detection of Stack Rumbling method.
+
+[3.4.0.12 Alpha] - Nov 10, 2024
+ - Fixed access denied in "AddToScanResults".
+
+[3.4.0.11 Alpha] - Oct 15, 2024
+ - Added warning when profile Sids enumeration failed.
+
+[3.4.0.10 Alpha] - Sep 23, 2024
+ - Microsoft certificates has been updated.
+
 [3.4.0.9 Alpha] - Apr 18, 2024
  - Fixed false positive "User missing" in O22 - Tasks (thanks to picasso).
  - Improved RegJump.

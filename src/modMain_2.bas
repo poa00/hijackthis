@@ -422,7 +422,7 @@ Public Sub CheckO25Item()
                                 
                                 .Consumer.Name = ConsumerName
                                 .Consumer.NameSpace = ConsumerNameSpace
-                                .Consumer.Path = ConsumerPath
+                                .Consumer.path = ConsumerPath
                                 .Consumer.KillTimeout = lKillTimeout
                                 
                                 .Timer.id = sTimerName
@@ -432,7 +432,7 @@ Public Sub CheckO25Item()
                                 .Filter.Query = sFilterQuery
                                 .Filter.Name = FilterName
                                 .Filter.NameSpace = FilterNameSpace
-                                .Filter.Path = FilterPath
+                                .Filter.path = FilterPath
                                 
                             End With
                             AddCustomToFix .Custom, CUSTOM_ACTION_O25
@@ -516,11 +516,11 @@ Public Sub RemoveSubscriptionWMI(O25 As O25_ENTRY)
         On Error Resume Next
         'filter
         Set objService = GetObject("winmgmts:{impersonationLevel=Impersonate, (Security, Backup)}!\\.\" & .Filter.NameSpace)
-        objService.Get(.Filter.Path).Delete_
+        objService.Get(.Filter.path).Delete_
         
         'consumer
         Set objService = GetObject("winmgmts:{impersonationLevel=Impersonate, (Security, Backup)}!\\.\" & .Consumer.NameSpace)
-        objService.Get(.Consumer.Path).Delete_
+        objService.Get(.Consumer.path).Delete_
         
         'timer
         If 0 <> Len(.Timer.id) Then
@@ -557,7 +557,7 @@ Public Sub RemoveSubscriptionWMI(O25 As O25_ENTRY)
         
                 If Not IsNull(objBinding.Filter) And Not IsNull(objBinding.Consumer) Then
                 
-                    If objBinding.Filter = .Filter.Path And objBinding.Consumer = .Consumer.Path Then
+                    If objBinding.Filter = .Filter.path And objBinding.Consumer = .Consumer.path Then
                 
                         Set objBindingToDelete = objBinding
                         Finish = True
@@ -797,7 +797,7 @@ Public Sub CheckO26Item()
     
     Const FLG_APPLICATION_VERIFIER As Long = &H100&
     
-    Dim sKeys$(), sSubkeys$(), i&, j&, sFile$, sArgs$, sHit$, sData$, result As SCAN_RESULT
+    Dim sKeys$(), sSubkeys$(), i&, j&, sFile$, sArgs$, sHit$, sData$, iData&, result As SCAN_RESULT
     Dim bDisabled As Boolean, sGFlag As String
     Dim bPerUser As Boolean, aTmp() As String, sAlias As String
     Dim bSafe As Boolean, sOrigLine As String
@@ -829,7 +829,22 @@ Public Sub CheckO26Item()
         sKeys = Split(Reg.EnumSubKeys(HE.Hive, HE.Key, HE.Redirected), "|")    'for each image
         
         For i = 0 To UBound(sKeys)
-
+            
+            iData = Reg.GetDword(HE.Hive, HE.Key & "\" & sKeys(i), "MinimumStackCommitInBytes", HE.Redirected)
+            If Reg.StatusCode = ERROR_SUCCESS Then
+                sHit = sAlias & " - Debugger (Stack Rumbling): " & HE.HiveNameAndSID & "\..\" & sKeys(i) & ": [MinimumStackCommitInBytes] = 0x" & Hex(iData)
+                
+                If Not IsOnIgnoreList(sHit) Then
+                    With result
+                        .Section = "O26"
+                        .HitLineW = sHit
+                        AddRegToFix .Reg, REMOVE_VALUE, HE.Hive, HE.Key & "\" & sKeys(i), "MinimumStackCommitInBytes", , HE.Redirected
+                        .CureType = REGISTRY_BASED
+                    End With
+                    AddToScanResults result
+                End If
+            End If
+            
             sData = Reg.GetString(HE.Hive, HE.Key & "\" & sKeys(i), "Debugger", HE.Redirected)
             
             If Len(sData) <> 0 Then
@@ -1336,10 +1351,13 @@ Public Sub CheckO27Item()
     Dim aProfiles() As String
     Dim sProfilePath As String
     Dim sKey As String
+    Dim iCount As Long
     
     sKey = "SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
     
-    For i = 1 To Reg.EnumSubKeysToArray(HKLM, sKey, sidList)
+    iCount = Reg.EnumSubKeysToArray(HKLM, sKey, sidList)
+    
+    For i = 1 To iCount
         
         sProfilePath = Reg.GetString(HKLM, sKey & "\" & sidList(i), "ProfileImagePath")
         ArrayAddStr aProfiles, sProfilePath
@@ -1359,8 +1377,12 @@ Public Sub CheckO27Item()
         End If
     Next
     
+    If iCount = 0 Then
+        AddWarning "Profile Sids enumeration failed in HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList with error: " & Reg.StatusCode
+    End If
+    
     'O27 - Account: (Bad profile)
-    If Len(ProfilesDir) <> 0 Then
+    If Len(ProfilesDir) <> 0 And AryItems(aProfiles) <> 0 Then
         Dim aFolders() As String
         Dim sName As String
         Dim aWhiteUsers(3) As String

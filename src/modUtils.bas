@@ -554,14 +554,14 @@ ErrorHandler:
     If inIDE Then Stop: Resume Next
 End Function
 
-Public Function IsSignPresent(filename As String) As Boolean
+Public Function IsSignPresent(FileName As String) As Boolean
     ' &H3C -> PE_Header offset
     ' PE_Header offset + &H18 = Optional_PE_Header
     ' PE_Header offset + &H78 = Data_Directories offset
     ' Data_Directories offset + &H20 = SecurityDir -> Address (dword), Size (dword) for digital signature.
     
     On Error GoTo ErrorHandler:
-    AppendErrorLogCustom "IsSignPresent - Begin", "File: " & filename
+    AppendErrorLogCustom "IsSignPresent - Begin", "File: " & FileName
     
     Const IMAGE_FILE_MACHINE_I386   As Long = &H14C&
     Const IMAGE_FILE_MACHINE_IA64   As Long = &H200&
@@ -576,10 +576,10 @@ Public Function IsSignPresent(filename As String) As Boolean
     Dim FSize           As Long
     Dim Redirect As Boolean, bOldStatus As Boolean
   
-    Redirect = ToggleWow64FSRedirection(False, filename, bOldStatus)
+    Redirect = ToggleWow64FSRedirection(False, FileName, bOldStatus)
   
     ff = FreeFile()
-    Open filename For Binary Access Read Shared As #ff
+    Open FileName For Binary Access Read Shared As #ff
     FSize = LOF(ff)
     
     If FSize >= &H3C& + 6& Then
@@ -609,7 +609,7 @@ Public Function IsSignPresent(filename As String) As Boolean
     AppendErrorLogCustom "IsSignPresent - End"
     Exit Function
 ErrorHandler:
-    ErrorMsg Err, "modUtils_IsSignPresent", "File:", filename
+    ErrorMsg Err, "modUtils_IsSignPresent", "File:", FileName
     If Redirect Then Call ToggleWow64FSRedirection(bOldStatus)
     If inIDE Then Stop: Resume Next
 End Function
@@ -2878,14 +2878,18 @@ End Function
 Public Function LimitHitLineLength(sLine As String, ByVal iLimit As Long) As String
     If Len(sLine) > iLimit Then
         Dim posMark As Long
+        Dim lastPart As String
         'Preserve special marks at the end of the line
         posMark = GetLastCharPosWithMaxDistReverse(sLine, "(", 150)
         If posMark <> 0 Then
             iLimit = iLimit - (Len(sLine) - posMark)
             If iLimit < 1 Then iLimit = 1
         End If
-        LimitHitLineLength = Left$(sLine, iLimit) & "... (" & (Len(sLine) - iLimit) & " more chars" & ")" & _
-            IIf(posMark = 0, vbNullString, " " & mid$(sLine, posMark))
+        If posMark <> 0 Then
+            lastPart = " " & mid$(sLine, posMark)
+        End If
+        
+        LimitHitLineLength = Left$(sLine, iLimit) & "... (" & (Len(sLine) - iLimit) & " more chars" & ")" & lastPart
     Else
         LimitHitLineLength = sLine
     End If

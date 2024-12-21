@@ -4186,6 +4186,7 @@ Sub CheckO4_RegRuns()
                             End If
                             .CureType = REGISTRY_BASED Or FILE_BASED Or PROCESS_BASED
                         End With
+                        
                         AddToScanResults result
                     End If
                 End If
@@ -13721,6 +13722,7 @@ Public Function InArray( _
     Optional CompareMethod As VbCompareMethod) As Boolean
     
     On Error GoTo ErrorHandler:
+    If AryItems(MyArray) = 0 Then Exit Function
     If lB = -2147483647 Then lB = LBound(MyArray)   'some trick
     If uB = 2147483647 Then uB = UBound(MyArray)    'Thanks to Казанский :)
     Dim i As Long
@@ -13903,8 +13905,8 @@ Public Function StrBeginWith(Text As String, BeginPart As String) As Boolean
     StrBeginWith = (StrComp(Left$(Text, Len(BeginPart)), BeginPart, 1) = 0)
 End Function
 
-Public Function StrEndWith(Text As String, LastPart As String) As Boolean
-    StrEndWith = (StrComp(Right$(Text, Len(LastPart)), LastPart, 1) = 0)
+Public Function StrEndWith(Text As String, lastPart As String) As Boolean
+    StrEndWith = (StrComp(Right$(Text, Len(lastPart)), lastPart, 1) = 0)
 End Function
 
 Public Function StrEndWithParamArray(Text As String, ParamArray vLastPart()) As Boolean
@@ -14387,6 +14389,14 @@ Public Function AryItems(vArray As Variant) As Long
                 End If
             End If
         End If
+    End If
+End Function
+
+Public Function LBoundSafe(vArray As Variant) As Long
+    If AryItems(vArray) Then
+        LBoundSafe = LBound(vArray)
+    Else
+        LBoundSafe = 2147483647
     End If
 End Function
 
