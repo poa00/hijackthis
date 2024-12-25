@@ -11,7 +11,12 @@ Version history:
 |||||       1. HiJackThis: changelog         |||||
 ==================================================
 
-[3.4.0.13 Alpha] - Dec 12, 2024
+[3.4.0.14 Alpha] - Dec 25, 2024
+ - O7 - Policy: added checking for plain login/password usage.
+ - O26 - Debugger fix (thanks to thyrex).
+ - Certificates and lolbin base has been updated.
+
+[3.4.0.13 Alpha] - Dec 21, 2024
  - O26 - Debugger: Added detection of Stack Rumbling method.
 
 [3.4.0.12 Alpha] - Nov 10, 2024

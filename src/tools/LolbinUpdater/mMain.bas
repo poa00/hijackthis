@@ -45,6 +45,12 @@ Public Sub Main()
         ExitProcessVB 1
     End If
     
+    WriteStdout ""
+    WriteStdout "{NOTIFY} {+} Plus is marked whenever file exists in current system"
+    WriteStdout "{NOTIFY} {-} Minus when not found"
+    WriteStdout "{NOTIFY} Regardless of {+} or {-} all records will be added to a database"
+    WriteStdout ""
+    
     ParseJsonFile_ToLoLbinList sJson, listPath
     
     Set listNewPath = New Collection
@@ -68,18 +74,23 @@ Public Sub Main()
             bExist = mFile.FileExists(sPath)
             sPath = Unexpand(sPath)
             
-            If Not oPrevBase.Exists(sPath) Then
-            
-                listNewPath.Add sPath
+            If Not IsRandomVersionPath(sPath) Then
+                If Not oPrevBase.Exists(sPath) Then
                 
-                If bExist Then
-                    countExist = countExist + 1
-                    WriteStdout "{+} Found new entry: " & sPath
-                Else
-                    WriteStdout "{-} Found new entry: " & sPath
+                    listNewPath.Add sPath
+                    
+                    If bExist Then
+                        countExist = countExist + 1
+                        WriteStdout "{+} Found new entry: " & sPath
+                    Else
+                        WriteStdout "{-} Found new entry: " & sPath
+                    End If
                 End If
+            Else
+                'WriteStdout "{-} Skipped: " & sPath
             End If
-            
+        Else
+            'WriteStdout "{-} Skipped: " & sPath
         End If
     Next
     
@@ -88,7 +99,9 @@ Public Sub Main()
         ExitProcessVB 0
     End If
     
+    WriteStdout ""
     WriteStdout "{NOTIFY} " & countExist & " of " & listNewPath.Count & " new entries are present in your file system."
+    WriteStdout ""
     
     Dim ch$: ch = ReadStdin("Do you want to update the database? (Y/n) ")
     If StrComp(ch, "Y", 1) <> 0 Then
@@ -98,6 +111,7 @@ Public Sub Main()
     mFile.AppendFileWithCollection sTargetFile, listNewPath
     
     WriteStdout listNewPath.Count & " entries have been added to the database."
+    WriteStdout ""
     
     Exit Sub
 ErrorHandler:
@@ -160,6 +174,17 @@ Private Function IsRandomPath(sPath As String) As Boolean
         IsRandomPath = True
     ElseIf InStr(1, sPath, "XXX", vbTextCompare) <> 0 Then
         IsRandomPath = True
+    End If
+End Function
+
+Private Function IsRandomVersionPath(sPathUnxpanded As String) As Boolean
+    Dim pos As Long
+    pos = InStr(sPathUnxpanded, ">") 'unexpanded prefix
+    If pos <> 0 Then
+        pos = InStr(pos + 1, sPathUnxpanded, "<") ' ...\<version>\...
+        If pos <> 0 Then
+            IsRandomVersionPath = True
+        End If
     End If
 End Function
 

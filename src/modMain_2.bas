@@ -831,7 +831,7 @@ Public Sub CheckO26Item()
         For i = 0 To UBound(sKeys)
             
             iData = Reg.GetDword(HE.Hive, HE.Key & "\" & sKeys(i), "MinimumStackCommitInBytes", HE.Redirected)
-            If Reg.StatusCode = ERROR_SUCCESS Then
+            If iData < 0 Or iData > &H10000 Then
                 sHit = sAlias & " - Debugger (Stack Rumbling): " & HE.HiveNameAndSID & "\..\" & sKeys(i) & ": [MinimumStackCommitInBytes] = 0x" & Hex(iData)
                 
                 If Not IsOnIgnoreList(sHit) Then

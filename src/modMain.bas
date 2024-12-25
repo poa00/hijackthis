@@ -6836,6 +6836,46 @@ ErrorHandler:
     If inIDE Then Stop: Resume Next
 End Sub
 
+Sub CheckCredentials()
+
+    On Error GoTo ErrorHandler:
+    AppendErrorLogCustom "CheckCredentials - Begin"
+    
+    Dim sHit$, result As SCAN_RESULT
+    Dim lData As Long, sValue As String
+    
+    Dim HE As clsHiveEnum
+    Set HE = New clsHiveEnum
+    
+    HE.Init HE_HIVE_ALL
+    'Checking for plain login/password usage
+    HE.AddKey "System\CurrentControlSet\Control\SecurityProviders\WDigest"
+    sValue = "UseLogonCredential"
+
+    Do While HE.MoveNext
+        lData = Reg.GetDword(HE.Hive, HE.Key, sValue, HE.Redirected)
+        If lData <> 0 Then
+            sHit = BitPrefix("O7", HE) & " - Policy: " & HE.KeyAndHivePhysical & ": " & "[" & sValue & "] = " & lData
+            
+            If Not IsOnIgnoreList(sHit) Then
+                With result
+                    .Section = "O7"
+                    .HitLineW = sHit
+                    AddRegToFix .Reg, REMOVE_VALUE, HE.Hive, HE.Key, sValue, , HE.Redirected
+                    .CureType = REGISTRY_BASED
+                End With
+                AddToScanResults result
+            End If
+        End If
+    Loop
+
+    AppendErrorLogCustom "CheckCredentials - End"
+    Exit Sub
+ErrorHandler:
+    ErrorMsg Err, "CheckCredentials"
+    If inIDE Then Stop: Resume Next
+End Sub
+
 Sub CheckPolicyScripts()
     
     On Error GoTo ErrorHandler:
@@ -8088,6 +8128,8 @@ Public Sub CheckO7Item()
     
     'Policy - Logon scripts
     CheckPolicyScripts
+    
+    CheckCredentials
     
     CheckPolicyUAC
     

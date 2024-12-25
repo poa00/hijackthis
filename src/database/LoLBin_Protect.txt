@@ -139,7 +139,6 @@
 <PF64>\Windows Defender\Offline\OfflineScannerShell.exe
 <PF64>\Windows Mail\wab.exe
 <PF64>\WindowsApps\Microsoft.DesktopAppInstaller_1.11.2521.0_x64__8wekyb3d8bbwe\AppInstaller.exe
-<PF64>\WindowsApps\Microsoft.WindowsTerminal_<version_packageid>\wt.exe
 <SysRoot>\explorer.exe
 <SysRoot>\hh.exe
 <SysRoot>\Microsoft.NET\Framework64\v2.0.50727\Dfsvc.exe
@@ -347,3 +346,90 @@
 <SysRoot>\SysWOW64\xwizard.exe
 <SysRoot>\WinSxS\amd64_microsoft-windows-u..ed-telemetry-client_31bf3856ad364e35_10.0.16299.15_none_c2df1bba78111118\Runscripthelper.exe
 <SysRoot>\WinSxS\amd64_microsoft-windows-u..ed-telemetry-client_31bf3856ad364e35_10.0.16299.192_none_ad4699b571e00c4a\Runscripthelper.exe
+<SysRoot>\Microsoft.NET\Framework\v3.5\AddInUtil.exe
+<SysRoot>\Microsoft.NET\Framework64\v3.5\AddInUtil.exe
+<SysRoot>\System32\ComputerDefaults.exe
+<SysRoot>\SysWOW64\ComputerDefaults.exe
+<SysRoot>\Microsoft.NET\Framework\v3.5\csc.exe
+<SysRoot>\Microsoft.NET\Framework64\v3.5\csc.exe
+<SysRoot>\Microsoft.NET\Framework\v2.0.50727\csc.exe
+<SysRoot>\Microsoft.NET\Framework64\v2.0.50727\csc.exe
+<SysRoot>\Microsoft.NET\Framework\v2.0.50727\ngen.exe
+<SysRoot>\Microsoft.NET\Framework64\v2.0.50727\ngen.exe
+<SysRoot>\Microsoft.NET\Framework\v4.0.30319\ngen.exe
+<SysRoot>\Microsoft.NET\Framework64\v4.0.30319\ngen.exe
+<SysRoot>\Microsoft.NET\Framework64\v2.0.50727\RegSvcs.exe
+<SysRoot>\Microsoft.NET\Framework64\v4.0.30319\RegSvcs.exe
+<SysRoot>\Microsoft.NET\Framework\v2.0.50727\RegSvcs.exe
+<SysRoot>\Microsoft.NET\Framework\v4.0.30319\RegSvcs.exe
+<SysRoot>\SysWOW64\tar.exe
+<SysRoot>\Microsoft.NET\Framework\v4.0.30319\vbc.exe
+<SysRoot>\Microsoft.NET\Framework\v3.5\vbc.exe
+<SysRoot>\Microsoft.NET\Framework\v2.0.50727\vbc.exe
+<SysRoot>\Microsoft.NET\Framework64\v2.0.50727\vbc.exe
+<SysRoot>\System32\wbadmin.exe
+<PF32>\Microsoft Intune Management Extension\AgentExecutor.exe
+<PF32>\Windows Kits\10\App Certification Kit\appcert.exe
+<PF64>\Windows Kits\10\App Certification Kit\appcert.exe
+<PF32>\Microsoft\DefaultPack\DefaultPack.exe
+<PF64>\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\TestPlatform\Extensions\DumpMinitool.exe
+<PF32>\Windows Kits\10\bin\10.0.16299.0\x86\mftrace.exe
+<PF32>\Windows Kits\10\bin\10.0.16299.0\x64\mftrace.exe
+<PF32>\Windows Kits\10\bin\x86\mftrace.exe
+<PF32>\Windows Kits\10\bin\x64\mftrace.exe
+<PF32>\Microsoft Office 16\ClientX86\Root\Office16\MSAccess.exe
+<PF64>\Microsoft Office 16\ClientX64\Root\Office16\MSAccess.exe
+<PF32>\Microsoft Office\Office16\MSAccess.exe
+<PF64>\Microsoft Office\Office16\MSAccess.exe
+<PF32>\Microsoft Office 15\ClientX86\Root\Office15\MSAccess.exe
+<PF64>\Microsoft Office 15\ClientX64\Root\Office15\MSAccess.exe
+<PF32>\Microsoft Office\Office15\MSAccess.exe
+<PF64>\Microsoft Office\Office15\MSAccess.exe
+<PF32>\Microsoft Office 14\ClientX86\Root\Office14\MSAccess.exe
+<PF64>\Microsoft Office 14\ClientX64\Root\Office14\MSAccess.exe
+<PF32>\Microsoft Office\Office14\MSAccess.exe
+<PF64>\Microsoft Office\Office14\MSAccess.exe
+<PF32>\Microsoft Office\Office12\MSAccess.exe
+<PF64>\Microsoft Office\Office12\MSAccess.exe
+<PF64>\IIS\Microsoft Web Deploy V2\msdeploy.exe
+<PF32>\IIS\Microsoft Web Deploy V2\msdeploy.exe
+<PF64>\IIS\Microsoft Web Deploy V3\msdeploy.exe
+<PF64>\IIS\Microsoft Web Deploy V4\msdeploy.exe
+<PF32>\IIS\Microsoft Web Deploy V4\msdeploy.exe
+<PF64>\IIS\Microsoft Web Deploy V5\msdeploy.exe
+<PF32>\IIS\Microsoft Web Deploy V5\msdeploy.exe
+<PF32>\Microsoft Office\Office14\Visio.exe
+<PF64>\Microsoft Office\Office14\Visio.exe
+<PF32>\Microsoft Office\Office15\Visio.exe
+<PF64>\Microsoft Office\Office15\Visio.exe
+<PF32>\Microsoft Office\Office16\Visio.exe
+<PF64>\Microsoft Office\Office16\Visio.exe
+<PF32>\Microsoft Office\root\Office14\Visio.exe
+<PF64>\Microsoft Office\root\Office14\Visio.exe
+<PF32>\Microsoft Office\root\Office15\Visio.exe
+<PF64>\Microsoft Office\root\Office15\Visio.exe
+<PF32>\Microsoft Office\root\Office16\Visio.exe
+<PF64>\Microsoft Office\root\Office16\Visio.exe
+<PF32>\Microsoft Office\Office14\WinProj.exe
+<PF64>\Microsoft Office\Office14\WinProj.exe
+<PF32>\Microsoft Office\Office15\WinProj.exe
+<PF64>\Microsoft Office\Office15\WinProj.exe
+<PF32>\Microsoft Office\Office16\WinProj.exe
+<PF64>\Microsoft Office\Office16\WinProj.exe
+<PF32>\Microsoft Office\root\Office14\WinProj.exe
+<PF64>\Microsoft Office\root\Office14\WinProj.exe
+<PF32>\Microsoft Office\root\Office15\WinProj.exe
+<PF64>\Microsoft Office\root\Office15\WinProj.exe
+<PF32>\Microsoft Office\root\Office16\WinProj.exe
+<PF64>\Microsoft Office\root\Office16\WinProj.exe
+<SysRoot>\System32\winfile.exe
+<SysRoot>\winfile.exe
+<PF64>\WinFile\winfile.exe
+<PF32>\WinFile\winfile.exe
+<PF64>\WindowsApps\Microsoft.WindowsFileManager_10.3.0.0_x64__8wekyb3d8bbwe\WinFile\winfile.exe
+<UserProfile>\AppData\Local\Microsoft\OneDrive\OneDriveStandaloneUpdater.exe
+<UserProfile>\AppData\Local\Microsoft\Teams\current\Squirrel.exe
+<UserProfile>\AppData\Local\Microsoft\Teams\current\Teams.exe
+<UserProfile>\AppData\Local\Microsoft\Teams\update.exe
+<UserProfile>\AppData\Local\Temp\.net\devtunnel\devtunnel.exe
+<UserProfile>\AppData\Local\Temp\DevTunnels\devtunnel.exe

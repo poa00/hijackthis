@@ -521,6 +521,8 @@ Public Function EnvironExtendedW(sPath As String) As String
                 EnvironExtendedW = LocalAppData & mid$(sPath, pos)
             Case "<AllUsersProfile>"
                 EnvironExtendedW = AllUsersProfile & mid$(sPath, pos)
+            Case "<UserProfile>"
+                EnvironExtendedW = UserProfile & mid$(sPath, pos)
             Case Else
                 ErrorMsg Err, "Invalid prefix in database: " & sPath
         End Select
