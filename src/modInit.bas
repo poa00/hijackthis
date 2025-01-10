@@ -81,6 +81,8 @@ Private Sub PreInit()
     
     Debug.Assert MakeTrue(inIDE)
     
+    bFirstScanAfterProgramStarted = True
+    
     MAX_PATH_W_BUF = String$(MAX_PATH_W, 0&)
     
     SetCurrentDirectory StrPtr(AppPath())
@@ -222,6 +224,7 @@ Private Sub PostInit()
     
     Set OSver = New clsOSInfo
     Set Reg = New clsRegistry
+    Set cDrives = New clsDrives
     
     InitVariables
     
@@ -243,8 +246,10 @@ Private Sub PostInit()
         AppVerString = GetFilePropVersion(AppPath(True))
     End If
     
-    AppendErrorLogCustom "Logfile ( tracing ) of HiJackThis+ v." & AppVerString & vbCrLf & vbCrLf & _
-        "Command line: " & AppPath(True) & " " & g_sCommandLine & vbCrLf & vbCrLf & MakeLogHeader() & vbCrLf
+    If (bDebugMode Or bDebugToFile) Then
+        AppendErrorLogCustom "Logfile ( tracing ) of HiJackThis+ v." & AppVerString & vbCrLf & vbCrLf & _
+            "Command line: " & AppPath(True) & " " & g_sCommandLine & vbCrLf & vbCrLf & MakeLogHeader() & vbCrLf
+    End If
     
     Exit Sub
 ErrorHandler:

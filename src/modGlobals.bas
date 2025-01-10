@@ -293,6 +293,7 @@ Public bCheckForUpdates As Boolean
 Public bUpdateToTest    As Boolean
 Public bUpdateSilently  As Boolean
 Public bFirstRebootScan As Boolean
+Public bFirstScanAfterProgramStarted As Boolean
 Public bStartupScan     As Boolean
 Public gNotUserClick    As Boolean
 Public gNoGUI           As Boolean
@@ -449,6 +450,7 @@ Public g_CurrentLangEnum    As LangEnum
 Public g_CurrentLangID      As Long
 Public CryptVer             As Long
 Public g_sLastSearch        As String
+Public g_sLogHeaderCache    As String
 
 Public Enum ID_SECTION
     ID_SECTION_B
@@ -977,7 +979,7 @@ Public Declare Function GetPrivateProfileString Lib "kernel32.dll" Alias "GetPri
 'Public Declare Sub CopyMemory Lib "kernel32.dll" Alias "RtlMoveMemory" (Dest As Any, Source As Any, ByVal lSize As Long)
 Public Declare Function GetLogicalDriveStrings Lib "kernel32.dll" Alias "GetLogicalDriveStringsW" (ByVal nBufferLength As Long, ByVal lpBuffer As Long) As Long
 Public Declare Function PathIsNetworkPath Lib "Shlwapi.dll" Alias "PathIsNetworkPathW" (ByVal pszPath As Long) As Long
-Public Declare Function DeviceIoControl Lib "kernel32.dll" (ByVal hDevice As Long, ByVal dwIoControlCode As Long, lpInBuffer As Any, ByVal nInBufferSize As Long, ByVal lpOutBuffer As Long, ByVal nOutBufferSize As Long, lpBytesReturned As Long, ByVal lpOverlapped As Long) As Long
+Public Declare Function DeviceIoControl Lib "kernel32.dll" (ByVal hDevice As Long, ByVal dwIoControlCode As Long, ByVal lpInBuffer As Long, ByVal nInBufferSize As Long, ByVal lpOutBuffer As Long, ByVal nOutBufferSize As Long, lpBytesReturned As Long, ByVal lpOverlapped As Long) As Long
 Public Declare Function CopyFile Lib "kernel32.dll" Alias "CopyFileW" (ByVal lpExistingFileName As Long, ByVal lpNewFileName As Long, ByVal bDontOverwrite As Long) As Long
 Public Declare Function SHFileOperation Lib "shell32.dll" Alias "SHFileOperationW" (lpFileOp As SHFILEOPSTRUCT) As Long
 Public Declare Function GetLongPathName Lib "kernel32.dll" Alias "GetLongPathNameW" (ByVal lpszShortPath As Long, ByVal lpszLongPath As Long, ByVal cchBuffer As Long) As Long
@@ -2244,8 +2246,14 @@ Public Declare Function DeleteService Lib "Advapi32.dll" (ByVal hService As Long
 Public Declare Function CloseServiceHandle Lib "Advapi32.dll" (ByVal hSCObject As Long) As Long
 Public Declare Function QueryServiceStatus Lib "Advapi32.dll" (ByVal hService As Long, lpServiceStatus As Any) As Long
 
+Public Const SC_MANAGER_CONNECT            As Long = &H1&
 Public Const SC_MANAGER_CREATE_SERVICE     As Long = &H2&
 Public Const SC_MANAGER_ENUMERATE_SERVICE  As Long = &H4&
+Public Const SC_MANAGER_LOCK               As Long = &H8&
+Public Const SC_MANAGER_QUERY_LOCK_STATUS  As Long = &H10&
+Public Const SC_MANAGER_MODIFY_BOOT_CONFIG As Long = &H20&
+Public Const SC_MANAGER_ALL_ACCESS         As Long = &HF003F
+
 Public Const SERVICE_QUERY_CONFIG          As Long = &H1&
 Public Const SERVICE_CHANGE_CONFIG         As Long = &H2&
 Public Const SERVICE_QUERY_STATUS          As Long = &H4&

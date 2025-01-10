@@ -1,6 +1,6 @@
 ## Download
 [![](https://dragokas.com/tools/img/hjt/Icon_mini.png)](https://dragokas.com/tools/HiJackThis_test.zip)
-[Latest build](https://dragokas.com/tools/HiJackThis_test.zip) [v3.x Alpha] - test version
+[Latest build](https://dragokas.com/tools/HiJackThis_test.zip) [v3.x] - Release
 
 [![](https://dragokas.com/tools/img/hjt/Icon_mini.png)](https://dragokas.com/tools/HiJackThis_stable.zip)
 [Stable build](https://dragokas.com/tools/HiJackThis_stable.zip) [v2 outdated] - not updated anymore

@@ -16,7 +16,7 @@ Attribute VB_Ext_KEY = "Top_Level" ,"Yes"
 Option Explicit
 
 ' OSInfo class by Alex Dragokas
-' ver 1.19
+' ver 1.21
 '
 ' Updated to support x64 by Jon Johnson (fafalone)
 '
@@ -25,8 +25,9 @@ Option Explicit
 
 ' Versions:
 
-' 10.0* | Windows Server 2022 (ReleaseId 2009+)
-' 10.0* | Windows 11 (builds 22000+)
+' 10.0* | Windows Server 2025 (ReleaseId 2009, 24H2 Build 26100+)
+' 10.0* | Windows Server 2022 (ReleaseId 2009, 21H2 Build 20348+)
+' 10.0* | Windows 11 (ReleaseId , 21H2 Build 22000+)
 ' 10.0* | Windows Server 2016
 ' 10.0* | Windows 10 (builds 9885+, Insider Preview)
 ' 6.4*  | Windows 10 Technical Preview (builds 9879-)
@@ -231,7 +232,7 @@ Private Declare PtrSafe Function GetComputerName Lib "kernel32" Alias "GetComput
 Private Declare PtrSafe Function lstrlen Lib "kernel32" Alias "lstrlenW" (ByVal lpString As LongPtr) As Long
 Private Declare PtrSafe Function GlobalMemoryStatusEx Lib "kernel32" (ByRef lpBuffer As MEMORYSTATUSEX) As Long
 Private Declare PtrSafe Function PdhOpenQuery Lib "Pdh.dll" Alias "PdhOpenQueryW" (ByVal szDataSource As LongPtr, ByVal dwUserData As LongPtr, phQuery As LongPtr) As Long
-Private Declare Function PdhCloseQuery Lib "Pdh.dll" (ByVal QueryHandle As LongPtr) As Long
+Private Declare PtrSafe Function PdhCloseQuery Lib "Pdh.dll" (ByVal QueryHandle As LongPtr) As Long
 Private Declare PtrSafe Function PdhAddEnglishCounter Lib "Pdh.dll" Alias "PdhAddEnglishCounterW" (ByVal hQuery As LongPtr, ByVal szFullCounterPath As String, ByVal dwUserData As LongPtr, phCounter As LongPtr) As Long
 Private Declare PtrSafe Function PdhCollectQueryData Lib "Pdh.dll" (ByVal hQuery As LongPtr) As Long
 Private Declare PtrSafe Function PdhGetFormattedCounterValue Lib "Pdh.dll" (ByVal hCounter As LongPtr, ByVal dwFormat As Long, lpdwType As Long, pValue As PDH_FMT_COUNTERVALUE) As Long
@@ -620,7 +621,11 @@ Private Sub Class_Initialize()
             Else
                 If ReleaseId_ >= 2009 Then
                     If bIsWin11Core Then
-                        OSName_ = "Windows Server 2022"
+                        If osi.dwBuildNumber >= 26100 Then
+                            OSName_ = "Windows Server 2025"
+                        Else
+                            OSName_ = "Windows Server 2022"
+                        End If
                         IsWindows11OrGreater_ = True
                     Else
                         OSName_ = "Windows Unknown"
@@ -797,7 +802,7 @@ Private Sub Class_Initialize()
     If osi.wSuiteMask And VER_SUITE_TERMINAL Then SuiteMask_ = SuiteMask_ & " + " & "Terminal"
     If osi.wSuiteMask And VER_SUITE_WH_SERVER Then SuiteMask_ = SuiteMask_ & " + " & "WH Server"
     
-    If 0 <> Len(SuiteMask_) Then SuiteMask_ = Mid$(SuiteMask_, 4)
+    If 0 <> Len(SuiteMask_) Then SuiteMask_ = mid$(SuiteMask_, 4)
     
     ' wProductType
     Select Case osi.wProductType
@@ -968,7 +973,7 @@ Private Function IsProcessElevated(Optional hProcess As LongPtr) As Boolean
     Dim dwLengthNeeded   As Long
     Dim dwIsElevated     As Long
     
-    ' < Win Vista. Устанавливаем true, если пользователь состоит в группе "Администраторы"
+    ' < Win Vista. Set true, if user has membership in "Administrators" group
     If osi.dwMajorVersion < 6 Then IsProcessElevated = (GetUserType() = "Administrators"): Exit Function
 
     If hProcess = 0 Then hProcess = GetCurrentProcess()
@@ -1038,6 +1043,7 @@ Private Function GetUserType() As String
             If 0 <> GetTokenInformation(hProcessToken, ByVal TokenGroups, InfoBuffer(0), BufferSize, BufferSize) Then
                 
                 groupsCount = InfoBuffer(0)
+                Dim tpGroups() As SID_AND_ATTRIBUTES
                 ReDim tpGroups(groupsCount - 1) As SID_AND_ATTRIBUTES
                 
                 Dim fieldOffset As Long: fieldOffset = Abs(VarPtr(tpTokens.Groups(0)) - VarPtr(tpTokens))
@@ -1121,7 +1127,7 @@ Private Function GetCurrentProcessSID() As String
             Dim InfoBuffer() As Long
             ReDim InfoBuffer((dwSize \ 4) - 1) As Long
             
-            ' Получаем информацию о SID-ах групп, ассоциированных с этим токеном
+            ' Retrieving information about SIDs of groups associated with this token
             If 0 <> GetTokenInformation(hProcessToken, ByVal TokenUser, InfoBuffer(0), dwSize, dwSize) Then
             
                 Call CopyMemory(tkUser, InfoBuffer(0), LenB(tkUser))
@@ -1691,7 +1697,7 @@ Private Function GetLangNameByCultureCode(CultureCode As Long) As String
     GetLangNameByCultureCode = Lang
 End Function
 
-Public Function IsWow64() As Boolean   ' Разрядность ОС
+Public Function IsWow64() As Boolean
     Dim hModule As LongPtr, procAddr As LongPtr, lIsWin64 As Long
     Static isInit As Boolean, result As Boolean
     
@@ -1712,7 +1718,7 @@ Public Function IsWow64() As Boolean   ' Разрядность ОС
     End If
 End Function
 
-Private Function GetSecureBootState(out_Supported As Boolean, out_State As Boolean) As Boolean 'thanks to ISergey & Убежденный
+Private Function GetSecureBootState(out_Supported As Boolean, out_State As Boolean) As Boolean 'thanks to ISergey & Казакевич О.
     If Not IsWindows7OrGreater_ Then Exit Function
     Dim lState As Long
     Dim iStatus As Long
@@ -2039,14 +2045,14 @@ Public Property Get MemoryTotal() As Long ' in MB
     Dim mem As MEMORYSTATUSEX
     mem.dwLength = LenB(mem)
     GlobalMemoryStatusEx mem
-    MemoryTotal = CLng(mem.ullTotalPhys / 1024 * 10)
+    MemoryTotal = CLng(mem.ullTotalPhys / 104.8576)
 End Property
 
 Public Property Get MemoryFree() As Long ' in MB
     Dim mem As MEMORYSTATUSEX
     mem.dwLength = LenB(mem)
     GlobalMemoryStatusEx mem
-    MemoryFree = CLng(mem.ullAvailPhys / 1024 * 10)
+    MemoryFree = CLng(mem.ullAvailPhys / 104.8576)
 End Property
 
 Public Property Get MemoryLoad() As Long ' in %

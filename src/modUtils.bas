@@ -1455,7 +1455,7 @@ End Sub
 
 '// Expand env. variable, unquote, normalize 8.3 path, search file on %PATH$ and append postfix "(no file)" or "(file missing)" if need.
 '// Pass "sArgs" in case you want to check if argument missing for rundll32.exe process
-Public Function FormatFileMissing(ByVal sFile As String, Optional sArgs As String) As String
+Public Function FormatFileMissing(ByVal sFile As String, Optional sArgs As String, Optional out_bMissing As Boolean) As String
     On Error GoTo ErrorHandler:
     
     Dim pos As Long
@@ -1464,8 +1464,10 @@ Public Function FormatFileMissing(ByVal sFile As String, Optional sArgs As Strin
     
     If Len(sFile) = 0 Then
         FormatFileMissing = STR_NO_FILE
+        out_bMissing = True
     ElseIf sFile = STR_NO_FILE Then
         FormatFileMissing = sFile
+        out_bMissing = True
         Exit Function
     Else
         '8.3 -> Full
@@ -1476,6 +1478,7 @@ Public Function FormatFileMissing(ByVal sFile As String, Optional sArgs As Strin
                 FormatFileMissing = sFile
             Else
                 FormatFileMissing = sFile & " (folder missing)"
+                out_bMissing = True
             End If
             Exit Function
         End If
@@ -1486,6 +1489,7 @@ Public Function FormatFileMissing(ByVal sFile As String, Optional sArgs As Strin
             If InStr(sFile, "\") <> 0 Then
                 
                 FormatFileMissing = sFile & " " & STR_FILE_MISSING
+                out_bMissing = True
                 
             Else 'relative path?
                 Dim bFound As Boolean
@@ -1495,6 +1499,7 @@ Public Function FormatFileMissing(ByVal sFile As String, Optional sArgs As Strin
                     FormatFileMissing = sFile
                 Else
                     FormatFileMissing = sFile & " " & STR_FILE_MISSING
+                    out_bMissing = True
                 End If
             End If
         End If
@@ -1509,6 +1514,7 @@ Public Function FormatFileMissing(ByVal sFile As String, Optional sArgs As Strin
             sDll = GetRundllFile(sArgs)
             If Not FileExists(sDll) Then
                 FormatFileMissing = sDll & " " & STR_FILE_MISSING
+                out_bMissing = True
             End If
         End If
     End If

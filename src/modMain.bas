@@ -389,7 +389,7 @@ Private Type O25_Filter_Entry
     Name      As String
     NameSpace As String
     path      As String
-    Query     As String
+    query     As String
 End Type
 
 Public Type O25_ENTRY
@@ -476,7 +476,7 @@ Private Type MY_PROC_LOG
 End Type
 
 Private Type CERTIFICATE_BLOB_PROPERTY
-    PropertyID As Long
+    PropertyId As Long
     Reserved As Long
     Length As Long
     Data() As Byte
@@ -525,6 +525,7 @@ Public Perf     As TYPE_PERFORMANCE
 Public OSver    As clsOSInfo
 Public Proc     As clsProcess
 Public cMath    As clsMath
+Public cDrives  As clsDrives
 
 Private oDictProcAvail As clsTrickHashTable
 
@@ -4024,7 +4025,7 @@ Sub CheckO4_RegRuns()
     Dim i&, j&, sKey$, sData$, sHit$, sAlias$, sParam As String, sHash$, aValue() As String
     Dim bData() As Byte, isDisabledWin8 As Boolean, isDisabledWinXP As Boolean, flagDisabled As Long, sKeyDisable As String
     Dim sFile$, sArgs$, sUser$, bSafe As Boolean, aLines() As String
-    Dim aData() As String, bDisabled As Boolean, bMicrosoft As Boolean
+    Dim aData() As String, bDisabled As Boolean, bMicrosoft As Boolean, bMissing As Boolean
     Dim sOrigLine As String
     
     ReDim aRegRuns(1 To 9)
@@ -4133,6 +4134,8 @@ Sub CheckO4_RegRuns()
                     ElseIf StrComp(sFile, sWinSysDirWow64 & "\OneDriveSetup.exe", 1) = 0 And sArgs = "/thfirstsetup" Then
                         If IsMicrosoftFile(sFile) Then bSafe = True
                     ElseIf StrComp(sFile, sWinDir & "\system32\SecurityHealthSystray.exe", 1) = 0 And Len(sArgs) = 0 Then
+                        If IsMicrosoftFile(sFile) Then bSafe = True
+                    ElseIf StrComp(sFile, sWinDir & "\AzureArcSetup\Systray\AzureArcSysTray.exe", 1) = 0 And Len(sArgs) = 0 Then
                         If IsMicrosoftFile(sFile) Then bSafe = True
                     End If
                     
@@ -4394,13 +4397,13 @@ Sub CheckO4_RegRuns()
             sAlias = BitPrefix("O4", HE) & " - " & HE.HiveNameAndSID & "\..\" & aDes(HE.KeyIndex) & ": " & _
                 "[" & sParam & "] = "
             
-            sFile = FormatFileMissing(sFile)
+            sFile = FormatFileMissing(sFile, , bMissing)
             
             sHit = sAlias & ConcatFileArg(sFile, sArgs)
             
             If g_bCheckSum Then sHash = GetFileCheckSum(sFile): sHit = sHit & sHash
             
-            If (Not bSafe) And (Not IsOnIgnoreList(sHit)) Then
+            If bIgnoreAllWhitelists Or ((Not bSafe) And (Not IsOnIgnoreList(sHit)) And Not bMissing) Then
                 With result
                     .Section = "O4"
                     .HitLineW = sHit
@@ -5302,6 +5305,8 @@ Sub CheckO4_ActiveSetup() 'Thanks to Helge Klein for explanations
     dWhitelist.Add BuildPath(sWinSysDir, "unregmp2.exe /FirstLogon /Shortcuts /RegBrowsers /ResetMUI"), ""
     dWhitelist.Add BuildPath(sWinSysDir, "unregmp2.exe /ShowWMP"), ""
     dWhitelist.Add BuildPath(sWinSysDir, "unregmp2.exe /FirstLogon"), ""
+    dWhitelist.Add BuildPath(sWinSysDir, "Rundll32.exe """ & sWinSysDir & "\iesetup.dll"",IEHardenAdmin"), sWinSysDir & "\iesetup.dll"
+    dWhitelist.Add BuildPath(sWinSysDir, "Rundll32.exe """ & sWinSysDir & "\iesetup.dll"",IEHardenUser"), sWinSysDir & "\iesetup.dll"
     If OSver.IsWindowsVista Then
         dWhitelist.Add BuildPath(sWinSysDir, "ie4uinit.exe -BaseSettings"), ""
         dWhitelist.Add BuildPath(sWinSysDir, "ie4uinit.exe -UserIconConfig"), ""
@@ -6551,7 +6556,7 @@ Public Sub CheckSystemProblemsFreeSpace()
     Dim sHit As String
     Dim result As SCAN_RESULT
     
-    cFreeSpace = GetFreeDiscSpace(SysDisk, False)
+    cFreeSpace = cDrives.GetFreeSpace(SysDisk, False)
     ' < 1 GB ?
     If (cFreeSpace < cMath.MBToInt64(1& * 1024)) And (cFreeSpace <> 0@) Then
         
@@ -6741,7 +6746,7 @@ Public Sub ParseCertBlob(Blob() As Byte, out_CertHash As String, out_FriendlyNam
             'Notice: some prop. Ids supplied with a blob in unknown encoding form, not applicable for CertCreateCertificateContext
             'e.g. CERT_ENHKEY_USAGE_PROP_ID
             
-            Select Case Prop.PropertyID
+            Select Case Prop.PropertyId
             Case SHA1_HASH
                 out_CertHash = GetHexStringFromArray(Prop.Data)
             Case FRIENDLY_NAME
@@ -15439,6 +15444,11 @@ End Function
 
 Public Function MakeLogHeader() As String
 
+    If Len(g_sLogHeaderCache) <> 0 And bFirstScanAfterProgramStarted Then
+        MakeLogHeader = g_sLogHeaderCache
+        Exit Function
+    End If
+
     Dim TimeCreated As String
     Dim bSPOld As Boolean
     Dim sUTC As String
@@ -15492,18 +15502,42 @@ Public Function MakeLogHeader() As String
             vbCrLf
     
     '," & vbTab & "Uptime: " & TrimSeconds(GetSystemUpTime()) & " h/m" & vbCrLf
-            
+    
     sText = sText & "Time:      " & TimeCreated & " (" & sUTC & ")" & vbCrLf
     sText = sText & "Language:  " & "OS: " & OSver.LangSystemNameFull & " (" & "0x" & Hex$(OSver.LangSystemCode) & "). " & _
             "Display: " & OSver.LangDisplayNameFull & " (" & "0x" & Hex$(OSver.LangDisplayCode) & "). " & _
             "Non-Unicode: " & OSver.LangNonUnicodeNameFull & " (" & "0x" & Hex$(OSver.LangNonUnicodeCode) & ")" & vbCrLf
     
-    sText = sText & "Memory:    " & OSver.MemoryFree & " MiB Free. Loading RAM (" & OSver.MemoryLoad & " %)"
+    Dim iFreeSpace As Currency, dblFreeSpace As Double
+    Dim iTotalSpace As Currency, dblTotalSpace As Double
+    iFreeSpace = cDrives.GetFreeSpace(SysDisk, True, iTotalSpace)
+    dblFreeSpace = iFreeSpace / 107374.1824
+    dblTotalSpace = iTotalSpace / 107374.1824
+    
+    Dim diskTech As String
+    Select Case cDrives.GetStorageTechnology(SysDisk)
+        Case STORAGE_TECHNOLOGY_SSD: diskTech = "SSD"
+        Case STORAGE_TECHNOLOGY_HDD: diskTech = "HDD"
+        Case Else: diskTech = "Unknown tech"
+    End Select
+    
+    Dim diskStyle As String
+    Select Case cDrives.GetPartitionStyle(SysDisk)
+        Case PARTITION_STYLE_MBR: diskStyle = "MBR"
+        Case PARTITION_STYLE_GPT: diskStyle = "GPT"
+        Case Else: diskTech = "Unknown style"
+    End Select
+    
+    sText = sText & "Memory:    " & Format$(OSver.MemoryFree / 1024, "0.00") & " GiB Free / " & Round(OSver.MemoryTotal / 1024) & _
+        ". Loading RAM (" & OSver.MemoryLoad & " %)"
     If OSver.IsWindowsVistaOrGreater Then
         sText = sText & ", CPU (" & IIf(g_iCpuUsage <> 0, g_iCpuUsage, CLng(OSver.CpuUsage)) & " %)" & vbCrLf
     Else
         sText = sText & vbCrLf
     End If
+    
+    sText = sText & "Disk " & SysDisk & "    " & Format$(dblFreeSpace, "0.00") & " GiB Free / " & Round(dblTotalSpace) & _
+        " (" & diskTech & ", " & diskStyle & ")" & vbCrLf
     
     If OSver.MajorMinor >= 6 Then
         sText = sText & "Elevated:  " & IIf(OSver.IsElevated, "Yes", "No") & vbCrLf  '& vbTab & "IL: " & OSver.GetIntegrityLevel & vbCrLf
@@ -15518,8 +15552,9 @@ Public Function MakeLogHeader() As String
     sText = sText & "Ran by:    " & OSver.UserName & vbTab & "(group: " & OSver.UserType & sAccType & ") on " & OSver.ComputerName & _
         ", " & IIf(bDebugMode, "(SID: " & OSver.SID_CurrentProcess & ") ", vbNullString) & "FirstRun: " & IIf(bFirstRebootScan, "yes", "no") & _
         IIf(OSver.IsLocalSystemContext, " <=== Attention! ('Local System' account)", vbNullString) & vbCrLf
-        
+    
     MakeLogHeader = sText
+    g_sLogHeaderCache = sText
 End Function
 
 ' Сортировка по Хоару. На вход - массив j(), на выходе массив k() с индексами массива j в отсортированном порядке + отсортированный массив.

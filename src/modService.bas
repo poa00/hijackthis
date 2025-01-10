@@ -103,6 +103,7 @@ Private Declare Function QueryServiceStatus Lib "Advapi32.dll" (ByVal hService A
 Private Declare Function QueryServiceStatusEx Lib "Advapi32.dll" (ByVal hService As Long, ByVal InfoLevel As Long, lpBuffer As SERVICE_STATUS_PROCESS, ByVal cbBufSize As Long, pcbBytesNeeded As Long) As Long
 Private Declare Function RegOpenKeyEx Lib "Advapi32.dll" Alias "RegOpenKeyExW" (ByVal hKey As Long, ByVal lpSubKey As Long, ByVal ulOptions As Long, ByVal samDesired As Long, phkResult As Long) As Long
 Private Declare Function RegQueryValueExLong Lib "Advapi32.dll" Alias "RegQueryValueExW" (ByVal hKey As Long, ByVal lpValueName As Long, ByVal lpReserved As Long, ByRef lpType As Long, szData As Long, ByRef lpcbData As Long) As Long
+Private Declare Function ChangeServiceConfig Lib "Advapi32.dll" Alias "ChangeServiceConfigW" (ByVal hService As Long, ByVal dwServiceType As Long, ByVal dwStartType As Long, ByVal dwErrorControl As Long, ByVal lpBinaryPathName As Long, ByVal lpLoadOrderGroup As Long, ByVal lpdwTagId As Long, ByVal lpDependencies As Long, ByVal lpServiceStartName As Long, ByVal lpPassword As Long, ByVal lpDisplayName As Long) As Long
 
 Private Const SC_MANAGER_CREATE_SERVICE     As Long = &H2&
 Private Const SC_MANAGER_ENUMERATE_SERVICE  As Long = &H4&
@@ -119,6 +120,7 @@ Private Const STANDARD_RIGHTS_REQUIRED      As Long = &HF0000
 Private Const SERVICE_ALL_ACCESS = (STANDARD_RIGHTS_REQUIRED Or SERVICE_QUERY_CONFIG Or SERVICE_CHANGE_CONFIG Or SERVICE_QUERY_STATUS Or SERVICE_ENUMERATE_DEPENDENTS Or SERVICE_START Or SERVICE_STOP Or SERVICE_PAUSE_CONTINUE Or SERVICE_INTERROGATE Or SERVICE_USER_DEFINED_CONTROL)
 Private Const SERVICE_ACCESS_DELETE         As Long = &H10000
 Private Const SC_STATUS_PROCESS_INFO        As Long = 0&
+Private Const SERVICE_NO_CHANGE             As Long = &HFFFFFFFF
 
 'Win32ExitCode
 Private Const ERROR_SERVICE_SPECIFIC_ERROR  As Long = 1066&
@@ -218,7 +220,7 @@ ErrorHandler:
     If inIDE Then Stop: Resume Next
 End Function
 
-Public Function SetServiceStartMode(sServiceName As String, eNewServiceMode As SERVICE_START_MODE) As Boolean
+Private Function SetServiceStartMode_ByReg(sServiceName As String, eNewServiceMode As SERVICE_START_MODE) As Boolean
     On Error GoTo ErrorHandler:
     
     Dim lState As Long
@@ -228,12 +230,34 @@ Public Function SetServiceStartMode(sServiceName As String, eNewServiceMode As S
         
         lState = Reg.GetDword(HKEY_LOCAL_MACHINE, "System\CurrentControlSet\Services\" & sServiceName, "Start")
         
-        If lState = CLng(eNewServiceMode) Then SetServiceStartMode = True
+        If lState = CLng(eNewServiceMode) Then SetServiceStartMode_ByReg = True
     End If
     
     Exit Function
 ErrorHandler:
-    ErrorMsg Err, "SetServiceStartMode", sServiceName, eNewServiceMode
+    ErrorMsg Err, "SetServiceStartMode_ByReg", sServiceName, eNewServiceMode
+    If inIDE Then Stop: Resume Next
+End Function
+
+Public Function SetServiceStartMode(sServiceName As String, eNewServiceMode As SERVICE_START_MODE) As Boolean
+    On Error GoTo ErrorHandler:
+    Dim hSCManager&, hService&, dwSizeReq&
+    hSCManager = OpenSCManager(0&, 0&, SC_MANAGER_CONNECT)
+    If hSCManager <> 0 Then
+        hService = OpenService(hSCManager, StrPtr(sServiceName), SERVICE_QUERY_CONFIG Or SERVICE_CHANGE_CONFIG)
+        If hService <> 0 Then
+            If ChangeServiceConfig(hService, SERVICE_NO_CHANGE, eNewServiceMode, SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, 0) <> 0 Then
+                SetServiceStartMode = True
+            Else
+                SetServiceStartMode_ByReg sServiceName, eNewServiceMode
+            End If
+            CloseServiceHandle hService
+        End If
+        CloseServiceHandle hSCManager
+    End If
+    Exit Function
+ErrorHandler:
+    ErrorMsg Err, "SetServiceStartMode", sServiceName
     If inIDE Then Stop: Resume Next
 End Function
 
@@ -694,6 +718,9 @@ Public Function RunWMI_Service(bWait As Boolean, bAskBeforeLaunch As Boolean, bS
             bAcceptLaunch = True
         End If
         If bAcceptLaunch Then
+            If GetServiceStartMode("winmgmt") = SERVICE_MODE_DISABLED Then
+                SetServiceStartMode "winmgmt", SERVICE_MODE_MANUAL
+            End If
             If StartService("winmgmt", bWait) Then
                 RunWMI_Service = True
             Else
@@ -725,8 +752,8 @@ Public Function RunScheduler_Service(bWait As Boolean, bAskBeforeLaunch As Boole
             bAcceptLaunch = True
         End If
         If bAcceptLaunch Then
+            SetServiceStartMode "Schedule", SERVICE_MODE_AUTOMATIC
             If StartService("Schedule", bWait) Then
-                SetServiceStartMode "Schedule", SERVICE_MODE_AUTOMATIC
                 RunScheduler_Service = True
             Else
                 If bWait Then

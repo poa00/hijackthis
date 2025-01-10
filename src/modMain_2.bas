@@ -1474,6 +1474,7 @@ Public Sub CheckO27Item_RDP()
     Loop
     
     'https://learn.microsoft.com/en-us/troubleshoot/windows-server/remote/shadow-terminal-server-session
+    'https://habr.com/en/articles/147273/
     
     HE.Clear: DC.Clear
     
@@ -1482,7 +1483,10 @@ Public Sub CheckO27Item_RDP()
     
     '0 - Disable shadow
     '1 - Full access with user's permission
-    DC.AddValueData "Shadow", Array(0, 1)
+    '2 - Allow shadowing with full control but do not require user consent.
+    '3 - Allow shadowing in view-only mode and require user consent.
+    '4 - Allow shadowing in view-only mode without requiring user consent.
+    DC.AddValueData "Shadow", Array(0, 1, 3)
     
     Do While HE.MoveNext
         Do While DC.MoveNext

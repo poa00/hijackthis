@@ -1,7 +1,7 @@
 ﻿
 Version history:
 
-1. HijackThis+
+1. HiJackThis+
 2. StartupList
 3. ADSspy
 4. ProcMan
@@ -10,6 +10,14 @@ Version history:
 ==================================================
 |||||       1. HiJackThis: changelog         |||||
 ==================================================
+
+[3.4.0.15 Beta] - Jan 10, 2025
+ - Display free space of system drive, partition style (MBR, GPT) and storage technology (HDD, SSD)
+ - Fixed inaccurate RAM calculation, also total amount of memory displayed, MiB replaced into GiB.
+ - Added detection of Windows Server 2025.
+ - Updated O4, O27 databases.
+ - More reliable code for change services state.
+ - Some optimizations.
 
 [3.4.0.14 Alpha] - Dec 25, 2024
  - O7 - Policy: added checking for plain login/password usage.

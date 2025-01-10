@@ -2251,8 +2251,8 @@ Option Explicit
 
 #Const SCRIPT_FIX = False
 
-Private Const HJT_ALPHA             As Boolean = True
-Private Const HJT_BETA              As Boolean = False
+Private Const HJT_ALPHA             As Boolean = False
+Private Const HJT_BETA              As Boolean = True
 
 Private Const ADS_SPY_VERSION       As String = "1.14"
 Private Const STARTUP_LIST_VERSION  As String = "2.13"
@@ -2310,16 +2310,6 @@ Public Sub Test()
         g_ScanFilter.Inclusion(ID_SECTION_O7) = True
         g_ScanFilter.Inclusion(ID_SECTION_O1) = True
     End If
-    
-'    Dim result As SCAN_RESULT
-'    With result
-'        .Section = "O27"
-'        .HitLineW = "123"
-'        AddFileToFix .File, REMOVE_FOLDER, "c:\users\alex"
-'        .CureType = FILE_BASED
-'    End With
-'
-'    MakeBackup result
     
     Exit Sub
 ErrorHandler:
@@ -2493,7 +2483,7 @@ Private Sub FormStart_Stage1()
         SubClassScroll True
     End If
     
-    AppVerPlusName = g_AppName & " (Plus) build " & GetOwnCompilationDate() & " " & _
+    AppVerPlusName = g_AppName & " build " & GetOwnCompilationDate() & " " & _
         IIf(bIsAlpha, "Alpha", IIf(bIsBeta, "Beta", "Stable")) & " v." & AppVerString
     
     If Not bPolymorph Then
@@ -2574,8 +2564,10 @@ Private Sub FormStart_Stage1()
     B64_Init
     
     'header of tracing log
-    AppendErrorLogCustom vbCrLf & vbCrLf & "Logfile ( tracing ) of HiJackThis+ v." & AppVerString & vbCrLf & vbCrLf & _
-        "Command line: " & AppPath(True) & " " & g_sCommandLine & vbCrLf & vbCrLf & MakeLogHeader() & vbCrLf
+    If (bDebugMode Or bDebugToFile) Then
+        AppendErrorLogCustom vbCrLf & vbCrLf & "Logfile ( tracing ) of HiJackThis+ v." & AppVerString & vbCrLf & vbCrLf & _
+            "Command line: " & AppPath(True) & " " & g_sCommandLine & vbCrLf & vbCrLf & MakeLogHeader() & vbCrLf
+    End If
     
     LoadLoLBinList
     LoadSettings
@@ -5414,6 +5406,7 @@ Private Sub cmdScan_Click()
         End If
         
         g_bScanInProgress = False
+        bFirstScanAfterProgramStarted = False
 
         CloseProgressbar True
         

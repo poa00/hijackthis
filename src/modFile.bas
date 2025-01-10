@@ -256,7 +256,6 @@ Const MAX_FILE_SIZE As Currency = 314572800@
 'Private Declare Sub CopyMemory Lib "kernel32.dll" Alias "RtlMoveMemory" (Dest As Any, Source As Any, ByVal lSize As Long)
 'Private Declare Function GetLogicalDriveStrings Lib "kernel32.dll" Alias "GetLogicalDriveStringsW" (ByVal nBufferLength As Long, ByVal lpBuffer As Long) As Long
 'Private Declare Function PathIsNetworkPath Lib "Shlwapi.dll" Alias "PathIsNetworkPathW" (ByVal pszPath As Long) As Long
-'Private Declare Function DeviceIoControl Lib "kernel32.dll" (ByVal hDevice As Long, ByVal dwIoControlCode As Long, lpInBuffer As Any, ByVal nInBufferSize As Long, ByVal lpOutBuffer As Long, ByVal nOutBufferSize As Long, lpBytesReturned As Long, ByVal lpOverlapped As Long) As Long
 'Private Declare Function CopyFile Lib "kernel32.dll" Alias "CopyFileW" (ByVal lpExistingFileName As Long, ByVal lpNewFileName As Long, ByVal bDontOverwrite As Long) As Long
 'Private Declare Function SHFileOperation Lib "shell32.dll" Alias "SHFileOperationW" (lpFileOp As SHFILEOPSTRUCT) As Long
 'Private Declare Function GetLongPathName Lib "kernel32.dll" Alias "GetLongPathNameW" (ByVal lpszShortPath As Long, ByVal lpszLongPath As Long, ByVal cchBuffer As Long) As Long
@@ -1863,7 +1862,7 @@ Public Function GetDrives(Optional DriveTypeBit As DRIVE_TYPE_BIT = DRIVE_BIT_AN
                 'проверяем готово ли устройство (вставлен ли диск)
                 If DeviceIoControl(hDevice, _
                             lControlCode, _
-                             ByVal 0&, 0&, _
+                            0&, 0&, _
                             0&, 0&, _
                             cbBytesReturned, _
                             0&) Then
@@ -3318,21 +3317,6 @@ End Function
 
 Function ReplaceEV(p_Path As String, p_What As String, p_Into As String) As Boolean
   If StrBeginWith(p_Path, p_What) Then p_Path = p_Into & mid$(p_Path, Len(p_What) + 1): ReplaceEV = True
-End Function
-
-Public Function GetFreeDiscSpace(sRoot As String, bForCurrentUser As Boolean) As Currency ' result = Int64
-    On Error GoTo ErrorHandler
-    If IsProcedureAvail("GetDiskFreeSpaceExW", "kernel32.dll") Then
-        If bForCurrentUser Then
-            If GetDiskFreeSpaceEx(StrPtr(sRoot), VarPtr(GetFreeDiscSpace), 0&, 0&) = 0 Then Dbg "GetDiskFreeSpaceEx is failed with: " & Err.LastDllError
-        Else
-            If GetDiskFreeSpaceEx(StrPtr(sRoot), 0&, 0&, VarPtr(GetFreeDiscSpace)) = 0 Then Dbg "GetDiskFreeSpaceEx is failed with: " & Err.LastDllError
-        End If
-    End If
-    Exit Function
-ErrorHandler:
-    ErrorMsg Err, "modFile.GetFreeDiscSpace", "Root:", sRoot
-    If inIDE Then Stop: Resume Next
 End Function
 
 Public Function GetFilenameFromHandle(hFile As Long) As String

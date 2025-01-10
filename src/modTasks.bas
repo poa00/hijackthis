@@ -2021,7 +2021,7 @@ Public Function RestoreBitsJob(sName As String, sURL As String, sDestination As 
     If Not OSver.IsWindowsVistaOrGreater Then Exit Function
     
     If GetServiceStartMode("bits") = SERVICE_MODE_DISABLED Then SetServiceStartMode "bits", SERVICE_MODE_MANUAL
-    If GetServiceRunState("bits") <> SERVICE_RUNNING Then StartService "bits", True, False
+    If GetServiceRunState("bits") <> SERVICE_RUNNING Then StartService "bits", True, True
     
     BitsAdmin = PathX64(BuildPath(sWinSysDir, "bitsadmin.exe"))
     

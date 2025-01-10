@@ -496,7 +496,7 @@ Function PackO25_Entry(O25 As O25_ENTRY) As String
         dp.Push .Filter.Name
         dp.Push .Filter.NameSpace
         dp.Push .Filter.path
-        dp.Push .Filter.Query
+        dp.Push .Filter.query
         dp.Push .Timer.Type
         dp.Push .Timer.className
         dp.Push .Timer.id
@@ -536,7 +536,7 @@ Function UnpackO25_Entry(sHexed_o25_Entry As String) As O25_ENTRY
         .Filter.Name = dp.Fetch
         .Filter.NameSpace = dp.Fetch
         .Filter.path = dp.Fetch
-        .Filter.Query = dp.Fetch
+        .Filter.query = dp.Fetch
         .Timer.Type = dp.Fetch
         .Timer.className = dp.Fetch
         .Timer.id = dp.Fetch
@@ -1108,8 +1108,7 @@ Public Function ABR_CreateBackup(bForceIgnoreDays As Boolean) As Boolean
     End If
     
     Dim cFreeSpace As Currency
-    
-    cFreeSpace = GetFreeDiscSpace(SysDisk, False)
+    cFreeSpace = cDrives.GetFreeSpace(SysDisk, False)
     
     ' < 1 GB ?
     If (cFreeSpace < cMath.MBToInt64(1& * 1024)) And (cFreeSpace <> 0@) Then bLowSpace = True
@@ -1605,7 +1604,7 @@ Public Function SRP_Create_API() As Long
     Dim lSRFreq As Long
     Dim bStateAltered As Boolean
     
-    If GetFreeDiscSpace(SysDisk, False) < cMath.MBToInt64(2& * 1024) Then ' < 2 GB ?
+    If cDrives.GetFreeSpace(SysDisk, False) < cMath.MBToInt64(2& * 1024) Then ' < 2 GB ?
         'Not enough free disk space. Required at least 2 GB
         MsgBox Translate(1555) & " 2 GB.", vbExclamation
         Exit Function
@@ -1671,7 +1670,7 @@ Private Function SRP_Create() As Boolean 'WMI based
     'Note: that SR service needs some time (~ 15 sec.) to update list with newly created points
     'So, you will not see point if you create it a second ago
     
-    If GetFreeDiscSpace(SysDisk, False) < cMath.MBToInt64(2& * 1024) Then ' < 2 GB ?
+    If cDrives.GetFreeSpace(SysDisk, False) < cMath.MBToInt64(2& * 1024) Then ' < 2 GB ?
         'Not enough free disk space. Required at least 2 GB
         MsgBox Translate(1555) & " 2 GB.", vbExclamation
         Exit Function
