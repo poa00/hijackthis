@@ -11,6 +11,14 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
+'[clsDrives.cls]
+
+'
+' Drives class by Dragokas
+'
+' Purpose: provides functionality to work with disk storage devices
+'
+
 Option Explicit
 
 Public Enum STORAGE_TECHNOLOGY
@@ -154,7 +162,9 @@ ErrorHandler:
     If inIDE Then Stop: Resume Next
 End Function
 
-
+' Thanks to Raymond Chen
+' https://devblogs.microsoft.com/oldnewthing/20201023-00/?p=104395
+'
 Public Function GetStorageTechnology(sDrive As String) As STORAGE_TECHNOLOGY
     On Error GoTo ErrorHandler
     

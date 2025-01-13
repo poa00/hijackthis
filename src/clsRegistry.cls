@@ -2301,6 +2301,37 @@ ErrorHandler:
 End Function
 
 
+Public Function SearchKeyName(hHive As ENUM_REG_HIVE, _
+    ByVal sKeyWhereToSearch As String, _
+    ByVal sKeyName As String, _
+    out_Keys() As String, _
+    Optional bUseWow64 As Boolean, _
+    Optional bEraseArray As Boolean = True) As Long
+    
+    If bEraseArray Then ReDim out_Keys(0 To 0)
+    
+    Dim i As Long
+    Dim aSubKeys() As String
+    For i = 1 To Reg.EnumSubKeysToArray(hHive, sKeyWhereToSearch, aSubKeys, bUseWow64, False, True, False)
+        If StrComp(GetKeyName(aSubKeys(i)), sKeyName, vbTextCompare) = 0 Then
+            ArrayAddStr out_Keys, aSubKeys(i)
+        End If
+    Next
+    
+    SearchKeyName = UBoundSafe(out_Keys)
+    
+End Function
+
+
+Public Function GetKeyName(sPath As String) As String
+    Dim pos As Long
+    pos = InStrRev(sPath, "\")
+    If pos <> 0 Then
+        GetKeyName = mid$(sPath, pos + 1)
+    End If
+End Function
+
+
 Public Function GetKeyTime(hHive As ENUM_REG_HIVE, ByVal KeyName$, Optional bUseWow64 As Boolean) As Date
     On Error GoTo ErrorHandler:
     Dim hKey         As Long
@@ -3988,7 +4019,7 @@ End Property
 'if the last operation success, just returns the value passed in,
 'if the last operation failed, returns the string description of the status code, similar to StatusCodeDesc() func
 '
-Public Property Get StatusCodeDescOnFail(iSuccesValue As Variant) As String
+Public Property Get StatusCodeDescOnFail(iSuccesValue As Long) As String
     Select Case m_StatusCode
         Case ERROR_SUCCESS
              StatusCodeDescOnFail = CStr(iSuccesValue)

@@ -80,12 +80,12 @@ End Type
 
 Private Type JOB_UNICODE_STRING
     Length As Integer
-    Data As String
+    data As String
 End Type
 
 Private Type JOB_USER_DATA
     Size As Integer
-    Data() As Byte
+    data() As Byte
 End Type
 
 Private Type JOB_RESERVED_DATA
@@ -284,9 +284,7 @@ Public Function PathNormalize(ByVal sPath As String) As String
     End If
     
     If StrBeginWith(sPath, "\") Then sPath = SysDisk & sPath
-    
-    '???
-    'sPath = Replace(sPath, "/", "\")
+    sPath = Replace(sPath, "/", "\")
     
     If mid$(sPath, 2, 1) <> ":" Then
         bShouldSeek = True  'relative or on the %PATH%
@@ -1514,11 +1512,11 @@ Public Sub EnumJobs()
             
             sJobName = GetFileName(aFiles(i), True)
             
-            sFile = EnvironW(PathNormalize(Job.Prop.AppName.Data))
+            sFile = EnvironW(PathNormalize(Job.Prop.AppName.data))
             
             If mid$(sFile, 2, 1) <> ":" Then
-                If Len(Job.Prop.WorkDir.Data) <> 0 Then
-                    sTmp = BuildPath(Job.Prop.WorkDir.Data, sFile)
+                If Len(Job.Prop.WorkDir.data) <> 0 Then
+                    sTmp = BuildPath(Job.Prop.WorkDir.data, sFile)
                     If FileExists(sTmp) Then sFile = sTmp 'if only file exists in this work. folder
                 End If
             End If
@@ -1549,7 +1547,7 @@ Public Sub EnumJobs()
                 If IsMicrosoftFile(sFile) Then bActivation = True
             End If
             
-            sFile = FormatFileMissing(sFile, Job.Prop.Parameters.Data)
+            sFile = FormatFileMissing(sFile, Job.Prop.Parameters.data)
             
             SignVerifyJack sFile, result.SignResult
             
@@ -1613,8 +1611,8 @@ Private Function ParseJob(sFile As String, Job As JOB_FILE) As Boolean
         Read_Job_String cStream, Job.Prop.Comment
         cStream.ReadData VarPtr(Job.Prop.UserData.Size), 2
         If Job.Prop.UserData.Size > 0 Then
-            ReDim Job.Prop.UserData.Data(Job.Prop.UserData.Size - 1)
-            cStream.ReadData VarPtr(Job.Prop.UserData.Data(0)), Job.Prop.UserData.Size
+            ReDim Job.Prop.UserData.data(Job.Prop.UserData.Size - 1)
+            cStream.ReadData VarPtr(Job.Prop.UserData.data(0)), Job.Prop.UserData.Size
         End If
         cStream.ReadData VarPtr(Job.Prop.ReservedData.Size), 2
         If Job.Prop.ReservedData.Size = 8 Then
@@ -1645,7 +1643,7 @@ Private Sub Read_Job_String(cStream As clsStream, JobUniStr As JOB_UNICODE_STRIN
     
     Dim cchText As Long
     
-    JobUniStr.Data = vbNullString
+    JobUniStr.data = vbNullString
     
     cStream.ReadData VarPtr(JobUniStr.Length), 2
     
@@ -1655,9 +1653,9 @@ Private Sub Read_Job_String(cStream As clsStream, JobUniStr As JOB_UNICODE_STRIN
         
         If cchText > 300 Then cchText = 300
     
-        JobUniStr.Data = String$(cchText - 1, 0&)
+        JobUniStr.data = String$(cchText - 1, 0&)
         
-        cStream.ReadData StrPtr(JobUniStr.Data), (cchText - 1) * 2& 'minus null terminator
+        cStream.ReadData StrPtr(JobUniStr.data), (cchText - 1) * 2& 'minus null terminator
         
         cStream.BufferPointer = cStream.BufferPointer + 2
         

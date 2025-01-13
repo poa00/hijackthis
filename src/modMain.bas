@@ -364,7 +364,7 @@ End Enum
 
 Private Type O25_Timer_Entry
     Type            As O25_TIMER_TYPE
-    className       As String
+    ClassName       As String
     id              As String
     Interval        As Long 'for O25_TIMER_INTERVAL
     EventDateTime   As Date 'for O25_TIMER_ABSOLUTE
@@ -479,7 +479,7 @@ Private Type CERTIFICATE_BLOB_PROPERTY
     PropertyId As Long
     Reserved As Long
     Length As Long
-    Data() As Byte
+    data() As Byte
 End Type
 
 Private Type FONT_PROPERTY
@@ -4202,7 +4202,7 @@ Sub CheckO4_RegRuns()
     Dim aRegKey() As String
     Dim aRegParam() As String
     Dim aDefData() As String
-    ReDim aRegKey(1 To 6) As String                   'key
+    ReDim aRegKey(1 To 8) As String                   'key
     ReDim aRegParam(1 To UBound(aRegKey)) As String   'param
     ReDim aDefData(1 To UBound(aRegKey)) As String    'data
     
@@ -4232,6 +4232,14 @@ Sub CheckO4_RegRuns()
         aRegParam(6) = "BootShell"
         aDefData(6) = "%SystemRoot%\system32\bootim.exe"
     End If
+    
+    aRegKey(7) = "HKLM\SOFTWARE\Classes\Applications"
+    aRegParam(7) = "AutoRun"
+    aDefData(7) = vbNullString
+    
+    aRegKey(8) = "HKLM\SYSTEM\Setup"
+    aRegParam(8) = "CmdLine"
+    aDefData(8) = vbNullString
     
     HE.Init HE_HIVE_ALL
     HE.AddKeys aRegKey
@@ -6734,8 +6742,8 @@ Public Sub ParseCertBlob(Blob() As Byte, out_CertHash As String, out_FriendlyNam
     Do While cStream.BufferPointer < cStream.Size
         cStream.ReadData VarPtr(Prop), 12
         If Prop.Length > 0 Then
-            ReDim Prop.Data(Prop.Length - 1)
-            cStream.ReadData VarPtr(Prop.Data(0)), Prop.Length
+            ReDim Prop.data(Prop.Length - 1)
+            cStream.ReadData VarPtr(Prop.data(0)), Prop.Length
             
 '            Debug.Print "PropID: " & prop.PropertyID
 '            Debug.Print "Length: " & prop.length
@@ -6748,11 +6756,11 @@ Public Sub ParseCertBlob(Blob() As Byte, out_CertHash As String, out_FriendlyNam
             
             Select Case Prop.PropertyId
             Case SHA1_HASH
-                out_CertHash = GetHexStringFromArray(Prop.Data)
+                out_CertHash = GetHexStringFromArray(Prop.data)
             Case FRIENDLY_NAME
-                out_FriendlyName = StringFromPtrW(VarPtr(Prop.Data(0)))
+                out_FriendlyName = StringFromPtrW(VarPtr(Prop.data(0)))
             Case 32
-                pCertContext = CertCreateCertificateContext(X509_ASN_ENCODING Or PKCS_7_ASN_ENCODING, VarPtr(Prop.Data(0)), UBound(Prop.Data) + 1)
+                pCertContext = CertCreateCertificateContext(X509_ASN_ENCODING Or PKCS_7_ASN_ENCODING, VarPtr(Prop.data(0)), UBound(Prop.data) + 1)
             
                 If pCertContext <> 0 Then
                     
@@ -10020,7 +10028,7 @@ Public Sub CheckO17Item()
     AppendErrorLogCustom "CheckO17Item - Begin"
     
     Dim hKey&, i&, j&, sDomain$, sHit$, sParam$, vParam, CSKey$, N&, sData$, aNames() As String
-    Dim UseWow, Wow6432Redir As Boolean, result As SCAN_RESULT, Data() As String, sTrimChar As String
+    Dim UseWow, Wow6432Redir As Boolean, result As SCAN_RESULT, data() As String, sTrimChar As String
     Dim TcpIpNameServers() As String: ReDim TcpIpNameServers(0)
     Dim aKeyDomain() As String
     ReDim aKeyDomain(0 To 1) As String
@@ -10066,17 +10074,17 @@ Public Sub CheckO17Item()
                 
                 If Len(sData) <> 0 Then
                     
-                    ReDim Data(0)
-                    Data(0) = sData
+                    ReDim data(0)
+                    data(0) = sData
                     
                     If sParam = "NameServer" Then
-                        Data = SplitByMultiDelims(Trim$(sData), True, sTrimChar, " ", ",")
-                        ArrayRemoveEmptyItems Data
+                        data = SplitByMultiDelims(Trim$(sData), True, sTrimChar, " ", ",")
+                        ArrayRemoveEmptyItems data
                     End If
                     
-                    For i = 0 To UBound(Data)
+                    For i = 0 To UBound(data)
                     
-                        sData = Data(i)
+                        sData = data(i)
                     
                         sHit = "O17 - HKLM\" & IIf(j = 0, "System\CCS", CSKey) & "\" & aKeyDomain(N) & ": [" & sParam & "] = " & sData
                     
@@ -10093,7 +10101,7 @@ Public Sub CheckO17Item()
                                 
                                 AddRegToFix .Reg, REPLACE_VALUE Or TRIM_VALUE Or REMOVE_VALUE_IF_EMPTY, _
                                     HKEY_LOCAL_MACHINE, CSKey & "\" & aKeyDomain(N), sParam, _
-                                    , , , CStr(Data(i)), vbNullString, sTrimChar
+                                    , , , CStr(data(i)), vbNullString, sTrimChar
                                 
                                 AddCustomToFix .Custom, CUSTOM_ACTION_SPECIFIC, sData
                                 
@@ -10115,8 +10123,8 @@ Public Sub CheckO17Item()
                 sData = Reg.GetString(HKEY_LOCAL_MACHINE, CSKey & "\Services\Tcpip\Parameters\Interfaces\" & aNames(N), sParam)
                 If sData <> vbNullString Then
                 
-                    ReDim Data(0)
-                    Data(0) = sData
+                    ReDim data(0)
+                    data(0) = sData
                     
                     If sParam = "NameServer" Then
                         
@@ -10125,21 +10133,21 @@ Public Sub CheckO17Item()
                         'O17 - HKLM\System\CCS\Services\Tcpip\..\{2A220B45-7A12-4A0B-92F0-00254794215A}: NameServer = 192.168.1.1,8.8.8.8
                         'into several separate
                         
-                        Data = SplitByMultiDelims(Trim$(sData), True, sTrimChar, " ", ",")
-                        ArrayRemoveEmptyItems Data
+                        data = SplitByMultiDelims(Trim$(sData), True, sTrimChar, " ", ",")
+                        ArrayRemoveEmptyItems data
                         
-                        For i = 0 To UBound(Data)
+                        For i = 0 To UBound(data)
                             ReDim Preserve TcpIpNameServers(UBound(TcpIpNameServers) + 1)   'for using in filtering DNS DHCP later
-                            TcpIpNameServers(UBound(TcpIpNameServers)) = Data(i)
+                            TcpIpNameServers(UBound(TcpIpNameServers)) = data(i)
                         Next
                     End If
                     
-                    For i = 0 To UBound(Data)
+                    For i = 0 To UBound(data)
                         
-                        sHit = "O17 - HKLM\" & IIf(j = 0, "System\CCS", CSKey) & "\Services\Tcpip\..\" & aNames(N) & ": [" & sParam & "] = " & Data(i)
+                        sHit = "O17 - HKLM\" & IIf(j = 0, "System\CCS", CSKey) & "\Services\Tcpip\..\" & aNames(N) & ": [" & sParam & "] = " & data(i)
                         
                         If sParam = "NameServer" Then
-                            sProviderDNS = GetCollectionItemByKey(CStr(Data(i)), colSafeDNS)
+                            sProviderDNS = GetCollectionItemByKey(CStr(data(i)), colSafeDNS)
                             If Len(sProviderDNS) <> 0 Then sHit = sHit & " (" & "Well-known DNS: " & sProviderDNS & ")"
                         End If
                         
@@ -10149,9 +10157,9 @@ Public Sub CheckO17Item()
                                 .HitLineW = sHit
                                 AddRegToFix .Reg, REPLACE_VALUE Or TRIM_VALUE Or REMOVE_VALUE_IF_EMPTY, _
                                     HKEY_LOCAL_MACHINE, CSKey & "\Services\Tcpip\Parameters\Interfaces\" & aNames(N), sParam, _
-                                    , , , CStr(Data(i)), vbNullString, sTrimChar
+                                    , , , CStr(data(i)), vbNullString, sTrimChar
                                 
-                                AddCustomToFix .Custom, CUSTOM_ACTION_SPECIFIC, CStr(Data(i))
+                                AddCustomToFix .Custom, CUSTOM_ACTION_SPECIFIC, CStr(data(i))
                                 
                                 .CureType = REGISTRY_BASED Or CUSTOM_BASED
                             End With
@@ -10693,7 +10701,7 @@ Public Sub CheckO20Item()
     'appinit_dlls + winlogon notify
     Dim sAppInit$, sFile$, sHit$, UseWow, Wow6432Redir As Boolean, result As SCAN_RESULT
     Dim bEnabled As Boolean, bRequireCodeSigned As Boolean, aFile() As String, bUnsigned As Boolean, i As Long
-    Dim sTrimChar As String, sOrigLine As String
+    Dim sTrimChar As String, sOrigLine As String, sKey As String, sArgs As String
     
     For Each UseWow In Array(False, True)
         Wow6432Redir = UseWow
@@ -10753,6 +10761,7 @@ Public Sub CheckO20Item()
                             AddRegToFix .Reg, REPLACE_VALUE Or TRIM_VALUE, _
                                 HKLM, "Software\Microsoft\Windows NT\CurrentVersion\Windows", "AppInit_DLLs", , CLng(Wow6432Redir), REG_RESTORE_SZ, _
                                 sOrigLine, vbNullString, sTrimChar
+                            AddJumpFile .Jump, JUMP_FILE, sFile
                             
                             .CureType = REGISTRY_BASED
                         End With
@@ -10781,6 +10790,7 @@ Public Sub CheckO20Item()
                             .Section = "O20"
                             .HitLineW = sHit
                             AddRegToFix .Reg, REMOVE_KEY, HKEY_LOCAL_MACHINE, "Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\" & sSubkeys(i), , , CLng(Wow6432Redir)
+                            AddJumpFile .Jump, JUMP_FILE, sFile
                             .CureType = REGISTRY_BASED
                         End With
                         AddToScanResults result
@@ -10788,8 +10798,79 @@ Public Sub CheckO20Item()
                 End If
             Next i
         End If
+    
+        Dim sData As String
+        Dim DC As clsDataChecker:   Set DC = New clsDataChecker
+        DC.AddValueData "IconServiceLib", "IconCodecService.dll"
+        DC.AddValueData "NaturalInputHandler", "Ninput.dll"
+        
+        sKey = "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows"
+        
+        Do While DC.MoveNext
+            sData = Reg.GetString(HKLM, sKey, DC.ValueName, Wow6432Redir)
+            If Len(sData) <> 0 Then
+                sFile = FindOnPath(sData, True)
+                sFile = FormatFileMissing(sFile)
+                SignVerifyJack sFile, result.SignResult
+                
+                If (Not result.SignResult.isMicrosoftSign) Or (Not bHideMicrosoft) Or bIgnoreAllWhitelists Then
+                    
+                    sHit = "O20 - HKLM\..\Windows: [" & DC.ValueName & "] = " & sFile & FormatSign(result.SignResult)
+                    If g_bCheckSum Then sHit = sHit & GetFileCheckSum(sFile)
+                    
+                    If Not IsOnIgnoreList(sHit) Then
+                        With result
+                            .Section = "O20"
+                            .HitLineW = sHit
+                            AddRegToFix .Reg, RESTORE_VALUE, HKEY_LOCAL_MACHINE, sKey, DC.ValueName, DC.DataStr, CLng(Wow6432Redir)
+                            AddJumpFile .Jump, JUMP_FILE, sFile
+                            .CureType = REGISTRY_BASED
+                        End With
+                        AddToScanResults result
+                    End If
+                End If
+            End If
+        Loop
+        
+        If OSver.IsWindows10OrGreater Then
+        
+            sKey = "Software\Microsoft\Windows NT\CurrentVersion\Winlogon"
+            DC.Clear
+            DC.AddValueData "ShellAppRuntime", "ShellAppRuntime.exe"
+            DC.AddValueData "ShellInfrastructure", "sihost.exe"
+            DC.AddValueData "VMApplet", "SystemPropertiesPerformance.exe /pagefile"
+        
+            Do While DC.MoveNext
+                sData = Reg.GetString(HKLM, sKey, DC.ValueName, Wow6432Redir)
+                If Len(sData) <> 0 Then
+                    SplitIntoPathAndArgs sData, sFile, sArgs, bIsRegistryData:=True
+                    sFile = FindOnPath(sFile, True)
+                    sFile = FormatFileMissing(sFile)
+                    SignVerifyJack sFile, result.SignResult
+                    
+                    If (Not result.SignResult.isMicrosoftSign) Or (Not bHideMicrosoft) Or bIgnoreAllWhitelists Or sData <> DC.DataStr Then
+                        
+                        sHit = "O20 - HKLM\..\Windows: [" & DC.ValueName & "] = " & ConcatFileArg(sFile, sArgs) & FormatSign(result.SignResult)
+                        If g_bCheckSum Then sHit = sHit & GetFileCheckSum(sFile)
+                        
+                        If Not IsOnIgnoreList(sHit) Then
+                            With result
+                                .Section = "O20"
+                                .HitLineW = sHit
+                                AddRegToFix .Reg, RESTORE_VALUE, HKEY_LOCAL_MACHINE, sKey, DC.ValueName, DC.DataStr, CLng(Wow6432Redir)
+                                AddJumpFile .Jump, JUMP_FILE, sFile
+                                .CureType = REGISTRY_BASED
+                            End With
+                            AddToScanResults result
+                        End If
+                    End If
+                End If
+            Loop
+        
+        End If
+        
     Next
-
+    
     AppendErrorLogCustom "CheckO20Item - End"
     Exit Sub
 ErrorHandler:
@@ -17895,3 +17976,10 @@ Public Function BitPrefix(sPrefix As String, HE As clsHiveEnum) As String
     End If
 End Function
 
+Public Function BitPrefixBool(sPrefix As String, redirection As Boolean) As String
+    If redirection Then
+        BitPrefixBool = sPrefix & "-32"
+    Else
+        BitPrefixBool = sPrefix
+    End If
+End Function

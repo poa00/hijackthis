@@ -11,6 +11,11 @@ Version history:
 |||||       1. HiJackThis: changelog         |||||
 ==================================================
 
+[3.4.0.16 Beta] - Jan 13, 2025
+ - Updated databases of O4, O20, O26.
+ - Added detection of MS Office Addin. Microsoft and disabled records doesn't displayed.
+ - Impoved search order of executable files through CLSID.
+
 [3.4.0.15 Beta] - Jan 10, 2025
  - Display free space of system drive, partition style (MBR, GPT) and storage technology (HDD, SSD)
  - Fixed inaccurate RAM calculation, also total amount of memory displayed, MiB replaced into GiB.

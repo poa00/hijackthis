@@ -61,6 +61,7 @@ End Enum
 #End If
 
 Public Enum HE_OPTIONAL_FLAGS
+    HE_OPTIONAL_FLAGS_NONE = 0
     HE_CONTROLSET_ALL = 1
     HE_CONTROLSET_EXCLUDE_CURRENT = 2
     HE_KEY_MUST_EXIST = 4
@@ -999,7 +1000,7 @@ Public Declare Function UnlockFileEx Lib "kernel32.dll" (ByVal hFile As Long, By
 Public Declare Function EmptyArray Lib "oleaut32.dll" Alias "SafeArrayCreateVector" (Optional ByVal VT As VbVarType = vbString, Optional ByVal lLow As Long = 0, Optional ByVal lCount As Long = 0) As String()
 Public Declare Function EmptyByteArray Lib "oleaut32.dll" Alias "SafeArrayCreateVector" (Optional ByVal VT As VbVarType = vbByte, Optional ByVal lLow As Long = 0, Optional ByVal lCount As Long = 0) As Byte()
 Public Declare Function NtCreateFile Lib "ntdll.dll" (ByRef FileHandle As Long, ByVal DesiredAccess As Long, ObjectAttributes As OBJECT_ATTRIBUTES, IoStatusBlock As IO_STATUS_BLOCK, AllocationSize As Any, ByVal FileAttributes As Long, ByVal ShareAccess As Long, ByVal CreateDisposition As Long, ByVal CreateOptions As Long, EaBuffer As Any, ByVal EaLength As Long) As Long
-Public Declare Function NtWriteFile Lib "ntdll.dll" (ByVal FileHandle As Long, EventArg As Any, APCRoutine As Long, APCContext As Any, IoStatusBlock As IO_STATUS_BLOCK, ByVal Buffer As Long, ByVal Length As Long, ByteOffset As Long, Key As Long) As Long
+Public Declare Function NtWriteFile Lib "ntdll.dll" (ByVal FileHandle As Long, EventArg As Any, APCRoutine As Long, APCContext As Any, IoStatusBlock As IO_STATUS_BLOCK, ByVal Buffer As Long, ByVal Length As Long, ByteOffset As Long, key As Long) As Long
 Public Declare Function OpenFile Lib "kernel32.dll" (ByVal FileName As String, ByVal OFs As Long, ByVal Flags As Long) As Long
 Public Declare Function RtlDosPathNameToNtPathName_U Lib "ntdll.dll" (ByVal DosFileName As Long, NtFileName As UNICODE_STRING, FilePart As Long, RelativeName As Any) As Long
 Public Declare Sub RtlInitUnicodeString Lib "ntdll.dll" (DestinationString As Any, ByVal sourceString As Long)

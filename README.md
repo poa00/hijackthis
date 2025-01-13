@@ -7,7 +7,7 @@
 
 ![](https://dragokas.com/tools/img/hjt/main_menu2.png)
 
-_(this is alpha-version - major changes are in progress; although it is definitely safe to use)_
+_(this is beta-version - major changes are in progress; although it is definitely safe to use)_
 
 # HiJackThis+
 

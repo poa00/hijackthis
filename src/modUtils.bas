@@ -1283,7 +1283,7 @@ End Sub
 Public Sub GetFileByCLSID(ByVal sCLSID As String, out_sFile As String, Optional out_sTitle As Variant, Optional bRedirected As Boolean, Optional bShared As Boolean)
     On Error GoTo ErrorHandler:
     
-    'Note: if 'bShared' = true, function will query for both WOW states,
+    'Note: if 'bShared' = false, function will query for both WOW states,
     'but firstly it will query for redir. state defined in 'bRedirected' argument.
     
     '++ VersionIndependentProgID ?
@@ -1323,15 +1323,20 @@ Public Sub GetFileByCLSID(ByVal sCLSID As String, out_sFile As String, Optional 
             bRedirState = bRedirected
         Else
             If Len(out_sFile) <> 0 Then Exit For
-            If Not bShared Then Exit For
+            If bShared Then Exit For
             bRedirState = Not bRedirected
         End If
-    
+        
         out_sFile = Reg.GetString(HKEY_CLASSES_ROOT, "CLSID\" & sCLSID & "\InProcServer32", vbNullString, bRedirState)
-    
+        
+        If StrComp(GetFileName(out_sFile, True), "mscoree.dll", vbTextCompare) = 0 Then
+            out_sFile = Reg.GetString(HKEY_CLASSES_ROOT, "CLSID\" & sCLSID & "\InProcServer32", "CodeBase", bRedirState)
+        End If
+        
         If 0 = Len(out_sFile) Then
             sAppID = Reg.GetString(HKEY_CLASSES_ROOT, "CLSID\" & sCLSID, "AppID", bRedirState)
             If 0 <> Len(sAppID) Then
+                'out_sTitle ???
                 If IsMissing(out_sTitle) Then
                     GetFileByAppID sAppID, out_sFile, , bRedirState, False
                 Else
@@ -2518,7 +2523,7 @@ Public Sub ArrayAdd(arr(), Value)
     If 0 = AryPtr(arr) Then
         ReDim arr(0)
     Else
-        ReDim Preserve arr(UBound(arr) + 1)
+        ReDim Preserve arr(LBound(arr) To UBound(arr) + 1)
     End If
     
     arr(UBound(arr)) = Value
@@ -2529,7 +2534,7 @@ Public Sub ArrayAddStr(arr() As String, Value As String)
     If 0 = AryPtr(arr) Then
         ReDim arr(0)
     Else
-        ReDim Preserve arr(UBound(arr) + 1)
+        ReDim Preserve arr(LBound(arr) To UBound(arr) + 1)
     End If
     
     arr(UBound(arr)) = Value
@@ -2540,7 +2545,7 @@ Public Sub ArrayAddLong(arr() As Long, Value As Long)
     If 0 = AryPtr(arr) Then
         ReDim arr(0)
     Else
-        ReDim Preserve arr(UBound(arr) + 1)
+        ReDim Preserve arr(LBound(arr) To UBound(arr) + 1)
     End If
     
     arr(UBound(arr)) = Value
