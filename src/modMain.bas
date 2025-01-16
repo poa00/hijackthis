@@ -4199,161 +4199,149 @@ Sub CheckO4_RegRuns()
     
     'Certain param based checkings
     
-    Dim aRegKey() As String
-    Dim aRegParam() As String
-    Dim aDefData() As String
-    ReDim aRegKey(1 To 8) As String                   'key
-    ReDim aRegParam(1 To UBound(aRegKey)) As String   'param
-    ReDim aDefData(1 To UBound(aRegKey)) As String    'data
-    
-    aRegKey(1) = "Software\Microsoft\Command Processor" 'HKLM + HKU
-    aRegParam(1) = "Autorun"
-    aDefData(1) = vbNullString
-    
-    aRegKey(2) = "HKLM\SYSTEM\CurrentControlSet\Control\BootVerificationProgram"
-    aRegParam(2) = "ImagePath"
-    aDefData(2) = vbNullString
-    
-    aRegKey(3) = "HKLM\System\CurrentControlSet\Control\Session Manager"
-    aRegParam(3) = "BootExecute"
-    
-    aRegKey(4) = "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot"
-    aRegParam(4) = "AlternateShell"
-    aDefData(4) = "cmd.exe"
-    
-    aRegKey(5) = "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager"
-    aRegParam(5) = "SetupExecute"
-    aDefData(5) = vbNullString
-    '
-    'see: https://guyrleech.wordpress.com/2014/07/16/reasons-for-reboots-part-2-2/
-    
+    Dim iValueType As Long
+    Dim RKI As clsRegKeyInfo
+    Dim RKICol As New clsRegKeyInfoCollection
+    RKICol.Add "Software\Microsoft\Command Processor", "Autorun" 'HKLM + HKU
+    RKICol.Add "HKLM\SYSTEM\CurrentControlSet\Control\BootVerificationProgram", "ImagePath"
+    RKICol.Add "HKLM\System\CurrentControlSet\Control\Session Manager", "BootExecute", _
+        "autocheck autochk *"
+    RKICol.Add "HKLM\System\CurrentControlSet\Control\Session Manager", "BootExecuteNoPnpSync", , REMOVE_VALUE
+    RKICol.Add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager", "SetupExecute"
+    RKICol.Add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager", "PlatformExecute", , REMOVE_VALUE
     If OSver.IsWindows8OrGreater Then
-        aRegKey(6) = "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager"
-        aRegParam(6) = "BootShell"
-        aDefData(6) = "%SystemRoot%\system32\bootim.exe"
+        'see: https://guyrleech.wordpress.com/2014/07/16/reasons-for-reboots-part-2-2/
+        RKICol.Add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager", "BootShell", _
+            "%SystemRoot%\system32\bootim.exe"
     End If
-    
-    aRegKey(7) = "HKLM\SOFTWARE\Classes\Applications"
-    aRegParam(7) = "AutoRun"
-    aDefData(7) = vbNullString
-    
-    aRegKey(8) = "HKLM\SYSTEM\Setup"
-    aRegParam(8) = "CmdLine"
-    aDefData(8) = vbNullString
+    RKICol.Add "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot", "AlternateShell", _
+        "cmd.exe"
+    RKICol.Add "HKLM\SOFTWARE\Classes\Applications", "AutoRun"
+    RKICol.Add "HKLM\SYSTEM\Setup", "CmdLine"
     
     HE.Init HE_HIVE_ALL
-    HE.AddKeys aRegKey
+    HE.AddKeys RKICol.KeysToArray
     
     Do While HE.MoveNext
         
-        sParam = aRegParam(HE.KeyIndex)
-        
-        sData = Reg.GetData(HE.Hive, HE.Key, sParam, HE.Redirected)
-        
-        aData = SplitSafe(sData, vbNullChar) 'if MULTI_SZ (BootExecute)
-        
-        ArrayRemoveEmptyItems aData
-        
-        For i = 0 To UBound(aData)
-        
-            bSafe = False
-        
-            sData = aData(i)
-            sOrigLine = sData
-        
-            If StrComp(sParam, "BootExecute", 1) = 0 Then
-                If i = 0 Then
-                    If StrBeginWith(sData, "autocheck ") Then 'remove autocheck, because it is not a real filename
-                        sData = mid$(sData, Len("autocheck ") + 1)
-                    End If
-                End If
-                
-                If bHideMicrosoft Then
-                    If OSver.MajorMinor = 5 Then 'Win2k
-                        If StrComp(sData, "autochk *", 1) = 0 Or StrComp(sData, "DfsInit", 1) = 0 Then bSafe = True
-                    ElseIf OSver.MajorMinor >= 6.2 And OSver.IsServer Then '2012 Server, 2012 Server R2 (2016 too ?)
-                        If StrComp(sData, "autochk /q /v *", 1) = 0 Then bSafe = True
-                        If StrComp(sData, BuildPath(sWinSysDir, "autochk.exe") & " /q /v *", 1) = 0 Then bSafe = True
-                    Else
-                        If StrComp(sData, "autochk *", 1) = 0 Then bSafe = True
-                    End If
-                End If
-            Else
-                If sData = EnvironW(aDefData(HE.KeyIndex)) Then bSafe = True
-            End If
-            
-            bDisabled = False
-            If StrComp(sParam, "AlternateShell", 1) = 0 Then
-                If 1 <> Reg.GetDword(HKEY_LOCAL_MACHINE, HE.Key & "\Options", "UseAlternateShell") Then
-                    bDisabled = True
-                End If
-            End If
-            
-            If Not bSafe Or bIgnoreAllWhitelists Or Not bHideMicrosoft Then
-                
-                'HKLM\..\Command Processor: [Autorun] =
-                sAlias = BitPrefix("O4", HE) & " - " & HE.HiveNameAndSID & "\..\" & GetFileName(HE.Key) & ": " & _
-                    "[" & sParam & "] = "
-                
-                SplitIntoPathAndArgs sData, sFile, sArgs, bIsRegistryData:=True
-                
-                sFile = FormatFileMissing(sFile)
-                
-                SignVerifyJack sFile, result.SignResult
-                
-                sHit = sAlias & ConcatFileArg(sFile, sArgs) & FormatSign(result.SignResult)
-                
-                If bDisabled Then sHit = sHit & " (disabled)"
-                
-                If g_bCheckSum Then sHash = GetFileCheckSum(sFile): sHit = sHit & sHash
-                
-                If Not IsOnIgnoreList(sHit) Then
-                    
-                    With result
-                        .Section = "O4"
-                        .HitLineW = sHit
-                        .Alias = sAlias
-                        If StrComp(sParam, "BootExecute", 1) = 0 Then
-                            
-                            AddRegToFix .Reg, REPLACE_VALUE Or TRIM_VALUE, _
-                                HE.Hive, HE.Key, sParam, , HE.Redirected, REG_RESTORE_MULTI_SZ, _
-                                sOrigLine, vbNullString, vbNullChar
-                            
-                            AddRegToFix .Reg, APPEND_VALUE_NO_DOUBLE, HE.Hive, HE.Key, sParam, _
-                                "autocheck autochk *", HE.Redirected, REG_RESTORE_MULTI_SZ
-                            
-                            If OSver.MajorMinor = 5 Then
-                                AddRegToFix .Reg, APPEND_VALUE_NO_DOUBLE, HE.Hive, HE.Key, sParam, _
-                                    "DfsInit", HE.Redirected, REG_RESTORE_MULTI_SZ
-                            End If
-                            AddFileToFix .File, REMOVE_FILE Or USE_FEATURE_DISABLE, sFile, sArgs
-                            
-                            .CureType = REGISTRY_BASED Or FILE_BASED
-                            
-                        ElseIf StrComp(sParam, "SetupExecute", 1) = 0 Then
-                            
-                            AddRegToFix .Reg, RESTORE_VALUE, HE.Hive, HE.Key, sParam, vbNullString, HE.Redirected
-                            
-                            AddFileToFix .File, REMOVE_FILE Or USE_FEATURE_DISABLE, sFile, sArgs
-                            AddJumpFiles .Jump, JUMP_FILE, ExtractFilesFromCommandLine(sData)
+        Set RKI = RKICol.Item(HE.KeyIndex)
+        sParam = RKI.ValueName
 
-                            .CureType = REGISTRY_BASED Or FILE_BASED
-                        Else
-                            If Len(aDefData(HE.KeyIndex)) <> 0 Then
-                                AddRegToFix .Reg, RESTORE_VALUE, HE.Hive, HE.Key, sParam, aDefData(HE.KeyIndex), HE.Redirected
-                            Else
-                                AddRegToFix .Reg, REMOVE_VALUE, HE.Hive, HE.Key, sParam, , HE.Redirected
-                            End If
-                                
-                            AddFileToFix .File, REMOVE_FILE Or USE_FEATURE_DISABLE, sFile, sArgs
-
-                            .CureType = REGISTRY_BASED Or FILE_BASED
+        sData = Reg.GetData(HE.Hive, HE.Key, sParam, HE.Redirected, , , iValueType): RKI.ValueType = iValueType
+        
+        If Len(sData) <> 0 Or (Len(sData) = 0 And Len(RKI.DefaultData) <> 0) Then
+        
+            aData = SplitSafe(sData, vbNullChar) 'if MULTI_SZ
+    
+            ArrayRemoveEmptyItems aData
+    
+            For i = 0 To UBound(aData)
+    
+                bSafe = False
+    
+                sData = aData(i)
+                sOrigLine = sData
+    
+                If StrComp(sParam, "BootExecute", 1) = 0 Then
+                    If i = 0 Then
+                        If StrBeginWith(sData, "autocheck ") Then 'remove autocheck, because it is not a real filename
+                            sData = mid$(sData, Len("autocheck ") + 1)
                         End If
-                    End With
-                    AddToScanResults result
+                    End If
+    
+                    If bHideMicrosoft Then
+                        If OSver.MajorMinor = 5 Then 'Win2k
+                            If StrComp(sData, "autochk *", 1) = 0 Or StrComp(sData, "DfsInit", 1) = 0 Then bSafe = True
+                        ElseIf OSver.MajorMinor >= 6.2 And OSver.IsServer Then '2012 Server, 2012 Server R2 (2016 too ?)
+                            If StrComp(sData, "autochk /q /v *", 1) = 0 Then bSafe = True
+                            If StrComp(sData, BuildPath(sWinSysDir, "autochk.exe") & " /q /v *", 1) = 0 Then bSafe = True
+                        Else
+                            If StrComp(sData, "autochk *", 1) = 0 Then bSafe = True
+                        End If
+                    End If
+                    If InStr(1, sData, "autochk", vbTextCompare) = 0 Then bSafe = False
+                Else
+                    If sData = EnvironW(RKI.DefaultData) Then bSafe = True
                 End If
-            End If
-        Next
+    
+                bDisabled = False
+                If StrComp(sParam, "AlternateShell", 1) = 0 Then
+                    If 1 <> Reg.GetDword(HKEY_LOCAL_MACHINE, HE.Key & "\Options", "UseAlternateShell") Then
+                        bDisabled = True
+                    End If
+                End If
+    
+                If Not bSafe Or bIgnoreAllWhitelists Or Not bHideMicrosoft Then
+    
+                    'HKLM\..\Command Processor: [Autorun] =
+                    sAlias = BitPrefix("O4", HE) & " - " & HE.HiveNameAndSID & "\..\" & GetFileName(HE.Key) & ": " & _
+                        "[" & sParam & "] = "
+    
+                    SplitIntoPathAndArgs sData, sFile, sArgs, bIsRegistryData:=True
+    
+                    sFile = FormatFileMissing(sFile)
+    
+                    SignVerifyJack sFile, result.SignResult
+    
+                    sHit = sAlias & ConcatFileArg(sFile, sArgs) & FormatSign(result.SignResult)
+    
+                    If bDisabled Then sHit = sHit & " (disabled)"
+    
+                    If g_bCheckSum Then sHash = GetFileCheckSum(sFile): sHit = sHit & sHash
+    
+                    If Not IsOnIgnoreList(sHit) Then
+    
+                        With result
+                            .Section = "O4"
+                            .HitLineW = sHit
+                            .Alias = sAlias
+                            If StrComp(sParam, "BootExecute", 1) = 0 Then
+    
+                                AddRegToFix .Reg, REPLACE_VALUE Or TRIM_VALUE, _
+                                    HE.Hive, HE.Key, sParam, , HE.Redirected, REG_RESTORE_MULTI_SZ, _
+                                    sOrigLine, vbNullString, vbNullChar
+    
+                                AddRegToFix .Reg, APPEND_VALUE_NO_DOUBLE, HE.Hive, HE.Key, sParam, _
+                                    "autocheck autochk *", HE.Redirected, REG_RESTORE_MULTI_SZ
+    
+                                If OSver.MajorMinor = 5 Then
+                                    AddRegToFix .Reg, APPEND_VALUE_NO_DOUBLE, HE.Hive, HE.Key, sParam, _
+                                        "DfsInit", HE.Redirected, REG_RESTORE_MULTI_SZ
+                                End If
+                                AddFileToFix .File, REMOVE_FILE Or USE_FEATURE_DISABLE, sFile, sArgs
+    
+                                .CureType = REGISTRY_BASED Or FILE_BASED
+    
+                            ElseIf RKI.ValueType = REG_MULTI_SZ Then
+                                
+                                If RKI.FixAction = REMOVE_VALUE Then
+                                    AddRegToFix .Reg, REMOVE_VALUE, HE.Hive, HE.Key, sParam, , HE.Redirected
+                                Else
+                                    AddRegToFix .Reg, RESTORE_VALUE, HE.Hive, HE.Key, sParam, RKI.DefaultData, HE.Redirected
+                                End If
+                                
+                                AddFileToFix .File, REMOVE_FILE Or USE_FEATURE_DISABLE, sFile, sArgs
+                                AddJumpFiles .Jump, JUMP_FILE, ExtractFilesFromCommandLine(sData)
+    
+                                .CureType = REGISTRY_BASED Or FILE_BASED
+                            Else
+                                If Len(RKI.DefaultData) <> 0 Then
+                                    AddRegToFix .Reg, RESTORE_VALUE, HE.Hive, HE.Key, sParam, RKI.DefaultData, HE.Redirected
+                                Else
+                                    AddRegToFix .Reg, REMOVE_VALUE, HE.Hive, HE.Key, sParam, , HE.Redirected
+                                End If
+    
+                                AddFileToFix .File, REMOVE_FILE Or USE_FEATURE_DISABLE, sFile, sArgs
+    
+                                .CureType = REGISTRY_BASED Or FILE_BASED
+                            End If
+                        End With
+                        AddToScanResults result
+                    End If
+                End If
+            Next
+        
+        End If
     Loop
     
     
@@ -17976,8 +17964,8 @@ Public Function BitPrefix(sPrefix As String, HE As clsHiveEnum) As String
     End If
 End Function
 
-Public Function BitPrefixBool(sPrefix As String, redirection As Boolean) As String
-    If redirection Then
+Public Function BitPrefixBool(sPrefix As String, Redirection As Boolean) As String
+    If Redirection Then
         BitPrefixBool = sPrefix & "-32"
     Else
         BitPrefixBool = sPrefix

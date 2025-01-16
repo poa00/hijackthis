@@ -18,7 +18,7 @@ Option Explicit
 ' Registry functions class by Alex Dragokas
 '
 
-'Revision 3.12 (12.12.2023)
+'Revision 3.13 (16.01.2025)
 
 'Private Const MAX_PATH       As Long = 260&
 'Private Const MAX_PATH_W     As Long = 32767&
@@ -1402,14 +1402,15 @@ Public Function SetMultiSZVal(hHive As ENUM_REG_HIVE, ByVal sKey$, sValue$, aDat
             For i = 0 To UBound(aData)
                 sData = sData & aData(i) & vbNullChar
             Next
-            If Len(sData) = 1 Then sData = vbNullString
-            
-            lret = RegSetValueEx(hKey, StrPtr(sValue), 0&, REG_MULTI_SZ, ByVal StrPtr(sData), Len(sData) * 2 + 2) 'data + nul + nul
-            SetMultiSZVal = (ERROR_SUCCESS = lret)
+            If Len(sData) = 1 Then
+                lret = RegSetValueEx(hKey, StrPtr(sValue), 0&, REG_MULTI_SZ, ByVal 0&, 0&)
+            Else
+                lret = RegSetValueEx(hKey, StrPtr(sValue), 0&, REG_MULTI_SZ, ByVal StrPtr(sData), Len(sData) * 2 + 2) 'data + nul + nul
+            End If
         Else
             lret = RegSetValueEx(hKey, StrPtr(sValue), 0&, REG_MULTI_SZ, ByVal 0&, 0&)
-            SetMultiSZVal = (ERROR_SUCCESS = lret)
         End If
+        SetMultiSZVal = (ERROR_SUCCESS = lret)
         RegCloseKey hKey
     End If
     m_StatusCode = lret

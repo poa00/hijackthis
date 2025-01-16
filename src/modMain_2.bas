@@ -857,7 +857,7 @@ Public Sub CheckO26Item()
         For i = 0 To UBound(sKeys)
             
             iData = Reg.GetDword(HE.Hive, HE.Key & "\" & sKeys(i), "MinimumStackCommitInBytes", HE.Redirected)
-            If iData < 0 Or iData > &H10000 Then
+            If (iData < 0 Or iData > &H10000) Or bIgnoreAllWhitelists Then
                 sHit = sAlias & " - Debugger (Stack Rumbling): " & HE.HiveNameAndSID & "\..\" & sKeys(i) & ": [MinimumStackCommitInBytes] = 0x" & Hex(iData)
                 
                 If Not IsOnIgnoreList(sHit) Then
@@ -1305,7 +1305,7 @@ Public Sub CheckO26ToolsHiJack()
             End If
         End If
         
-        If Not bSafe Then
+        If Not bSafe Or bIgnoreAllWhitelists Then
             
             sHit = "O26 - Tools: " & "HKLM\" & sKey & " (default) = " & ConcatFileArg(sFile, sArgs) & FormatSign(result.SignResult)
             
@@ -1341,11 +1341,13 @@ Public Sub CheckO26OfficeHiJack()
     
     'Area:
     'HKLM\SOFTWARE\Microsoft\VBA\Monitors
-    '
-    
+    'HKLM\Software\Microsoft\VBA\VBE\6.0\Addins
+    'HKLM\Software\Microsoft\VBA\VBE\6.0\Addins64
+    'HKLM\SOFTWARE\Microsoft\Office => Addins keys
+        
     'Articles:
     'https://www.hexacorn.com/blog/2014/01/10/beyond-good-ol-run-key-part-6-2/
-    '
+    'https://github.com/boyan-soubachov/Excelerator
     
     Dim i As Long, k As Long
     Dim aKeyName() As String, sClassName As String, sClassID As String, aKeys() As String
@@ -1358,7 +1360,7 @@ Public Sub CheckO26OfficeHiJack()
     Do While HE.MoveNext
         For i = 1 To Reg.EnumSubKeysToArray(HE.Hive, HE.Key, aKeyName(), HE.Redirected)
             sClassName = Reg.GetString(HE.Hive, HE.Key & "\" & aKeyName(i), "CLSID", HE.Redirected)
-            If Len(sClassName) <> 0 Then
+            If Len(sClassName) <> 0 Or bIgnoreAllWhitelists Then
                 sClassID = Reg.GetString(HKCR, sClassName & "\Clsid", "", HE.Redirected)
                 GetFileByCLSID sClassID, sFile, , HE.Redirected
                 sFile = FormatFileMissing(sFile)
@@ -1394,7 +1396,7 @@ Public Sub CheckO26OfficeHiJack()
         For i = 1 To Reg.EnumSubKeysToArray(HE.Hive, HE.Key, aKeyName(), HE.Redirected)
             sClassName = aKeyName(i)
             iLoadMode = Reg.GetDword(HE.Hive, HE.Key & "\" & sClassName, "LoadBehavior", HE.Redirected)
-            If iLoadMode <> 0 Then
+            If iLoadMode <> 0 Or bIgnoreAllWhitelists Then
                 bClsidRedirected = StrEndWith(HE.Key, "Addins") And OSver.IsWin64
                 
                 sClassID = Reg.GetString(HKCR, sClassName & "\Clsid", "", bClsidRedirected)
@@ -1441,7 +1443,7 @@ Public Sub CheckO26OfficeHiJack()
                 
                 sClassName = aKeyName(i)
                 iLoadMode = Reg.GetDword(HE.Hive, aKeys(k) & "\" & sClassName, "LoadBehavior", HE.Redirected)
-                If iLoadMode <> 0 Then
+                If iLoadMode <> 0 Or bIgnoreAllWhitelists Then
                     bClsidRedirected = HE.Redirected ' StrEndWith(HE.Key, "Addins") And OSver.IsWin64
                     
                     Set com = New clsCLSID

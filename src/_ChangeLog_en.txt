@@ -11,6 +11,12 @@ Version history:
 |||||       1. HiJackThis: changelog         |||||
 ==================================================
 
+[3.4.0.17 Beta] - Jan 16, 2025
+ - Updated database of O4.
+ - Check if BootExecute is missing or empty.
+ - Step towards unifying the addition of new keys to open possibility moving them to the database.
+ - Fixed a bug with the inability to clear value of the REG_MULTI_SZ type, previously they were just deleted.
+
 [3.4.0.16 Beta] - Jan 13, 2025
  - Updated databases of O4, O20, O26.
  - Added detection of MS Office Addin. Microsoft and disabled records doesn't displayed.
